@@ -1,0 +1,25 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Depurar svc.exe",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/bin/svc.exe",
+            "args": ["install"],  // Argumentos para tu servicio (ej: install/start/stop)
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "console": "externalTerminal"
+        },
+        {
+            "name": "Depurar winkey.exe",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/bin/winkey.exe",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "console": "externalTerminal"
+        }
+    ]
+}
