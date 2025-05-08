@@ -9,5 +9,6 @@ doc/subject.pdf
 !src
 !src/**
 !Makefile
+!build.bat
 !.gitignore
 !README.md
