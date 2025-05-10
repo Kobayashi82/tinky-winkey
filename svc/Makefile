@@ -14,36 +14,45 @@
 # ─────────────────────── CONFIGURATION ─────────────────────── #
 # ───────────────────────────────────────────────────────────── #
 
-BIN			= bin
-SVC			= svc
-WINKEY		= winkey
+SRC				= src
+OBJ				= build\obj
+BIN				= bin
+
+CC				= cl
+FLAGS			= /nologo /Wall /WX /EHsc /Iinc /Qspectre /wd5045 /DEBUG
+LIBS			= user32.lib advapi32.lib
+
+EXE				= svc.exe
+
+OBJS			= $(OBJ)\main.obj
 
 # ───────────────────────────────────────────────────────────── #
 # ─────────────────────────── RULES ─────────────────────────── #
 # ───────────────────────────────────────────────────────────── #
 
-all: _build_$(SVC) _build_$(WINKEY) _copy_binaries
+.SUFFIXES: .cpp .obj
+
+all: $(BIN)\$(EXE)
+
+$(BIN)\$(EXE): $(OBJS)
+	@if not exist $(BIN) mkdir $(BIN)
+	@$(CC) $(FLAGS) /Fe$(BIN)\$(EXE) $(OBJS) $(LIBS)
+
+$(OBJ)\main.obj: $(SRC)\main.cpp
+	@if not exist $(OBJ) mkdir $(OBJ)
+	@$(CC) $(FLAGS) /c /Fo$@ $**
 
 clean:
-	@cd $(SVC) && nmake /NOLOGO clean
-	@cd $(WINKEY) && nmake /NOLOGO clean
+	@if exist $(OBJ) rmdir /s /q $(OBJ)
+	@if exist build rmdir /s /q build
 
 fclean: clean
-	@cd $(SVC) && nmake /NOLOGO fclean
-	@cd $(WINKEY) && nmake /NOLOGO fclean
 	@if exist $(BIN) rmdir /s /q $(BIN)
 
 re: fclean all
 
-_build_$(SVC):
-	@cd $(SVC) && nmake /NOLOGO
-
-_build_$(WINKEY):
-	@cd $(WINKEY) && nmake /NOLOGO
-
-_copy_binaries:
+_create_directories:
+	@if not exist $(OBJ) mkdir $(OBJ)
 	@if not exist $(BIN) mkdir $(BIN)
-	@if exist $(SVC)\bin\$(SVC).exe copy $(SVC)\bin\$(SVC).exe $(BIN) > nul
-	@if exist $(WINKEY)\bin\$(WINKEY).exe copy $(WINKEY)\bin\$(WINKEY).exe $(BIN) > nul
 
-.PHONY: all clean fclean re _build_$(SVC) _build_$(WINKEY) _copy_binaries
+.PHONY: all svc clean fclean re
