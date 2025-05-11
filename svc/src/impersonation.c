@@ -1,18 +1,17 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   main.cpp                                           :+:      :+:    :+:   */
+/*   impersonation.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/05/08 13:00:34 by vzurera-          #+#    #+#             */
-/*   Updated: 2025/05/11 13:31:42 by vzurera-         ###   ########.fr       */
+/*   Created: 2025/05/11 13:31:21 by vzurera-          #+#    #+#             */
+/*   Updated: 2025/05/11 13:33:38 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <stdio.h>
+#pragma region "Includes"
 
-int main() {
-	printf("Funciona\n");
-	return 0;
-}
+	#include "svc.h"
+
+#pragma endregion
