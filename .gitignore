@@ -17,3 +17,5 @@ winkey/bin
 !build.bat
 !README.md
 !.gitignore
+!admin.c
+!build_admin.bat
