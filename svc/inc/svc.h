@@ -14,7 +14,6 @@
 
 #pragma region "Includes"
 
-	#include <stdio.h>
 	#include <windows.h>
 
 #pragma endregion
@@ -28,10 +27,10 @@
 
 #pragma region "Methods"
 
-	// Service Control
-	int control(int argc, char **argv);
-
 	// Service Manager
 	void WINAPI ServiceMain(DWORD dwArgc, LPSTR *lpszArgv);
+
+	// Service Control
+	int control(int argc, char **argv);
 
 #pragma endregion

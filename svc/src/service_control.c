@@ -48,6 +48,12 @@
 
 	#pragma region "Install"
 
+		// SERVICE_BOOT_START				Dispositivos del sistema operativo
+		// SERVICE_SYSTEM_START				Dispositivos de inicio del sistema
+		// SERVICE_AUTO_START				Inicio automático al arrancar Windows
+		// SERVICE_DEMAND_START				Inicio manual
+		// SERVICE_DISABLED					Servicio deshabilitado
+
 		int install(void) {
 			SC_HANDLE hSCManager = NULL;
 			SC_HANDLE hService = NULL;
@@ -118,7 +124,7 @@
 			SC_HANDLE hSCManager = NULL;
 			SC_HANDLE hService = NULL;
 			SERVICE_STATUS serviceStatus;
-			
+
 			// Abrir el Service Control Manager
 			hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
 			if (hSCManager == NULL) { printf("[!] Error opening Service Control Manager\n"); return (1); }
@@ -152,7 +158,7 @@
 				// Esperar a que el servicio se detenga (con timeout)
 				DWORD startTime = GetTickCount();
 				while (serviceStatus.dwCurrentState != SERVICE_STOPPED) { Sleep(500);
-					if (QueryServiceStatus(hService, &serviceStatus) == FALSE)	{ printf("[!] Failed to query service status\n");		break; }
+					if (QueryServiceStatus(hService, &serviceStatus) == FALSE) break;
 					if (GetTickCount() - startTime > 10000)						{ printf("[!] Timeout waiting for service to stop\n");	break; }
 				}
 			}
@@ -184,7 +190,7 @@
 		int start(void) {
 			SC_HANDLE hSCManager = NULL;
 			SC_HANDLE hService = NULL;
-			
+
 			// Abrir Service Control Manager
 			hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
 			if (hSCManager == NULL) { printf("[!] Error opening Service Control Manager\n"); return (1); }
@@ -214,7 +220,7 @@
 				CloseServiceHandle(hSCManager);
 				return (1);
 			}
-			
+
 			printf("[+] Service '%s' started successfully\n", Name);
 
 			// Limpiar handles
@@ -231,7 +237,7 @@
 			SC_HANDLE hSCManager = NULL;
 			SC_HANDLE hService = NULL;
 			SERVICE_STATUS serviceStatus;
-			
+
 			// Abrir Service Control Manager
 			hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
 			if (hSCManager == NULL) { printf("[!] Error opening Service Control Manager\n"); return (1); }
@@ -263,7 +269,7 @@
 			// Esperar a que el servicio se detenga (con timeout)
 			DWORD startTime = GetTickCount();
 			while (serviceStatus.dwCurrentState != SERVICE_STOPPED) { Sleep(500);
-				if (QueryServiceStatus(hService, &serviceStatus) == FALSE)	{ printf("[!] Failed to query service status\n");			break; }
+				if (QueryServiceStatus(hService, &serviceStatus) == FALSE) break;
 				if (GetTickCount() - startTime > 10000)						{ printf("[!] Timeout waiting for service to stop\n");		break; }
 			}
 
@@ -284,8 +290,8 @@
 			SC_HANDLE hService = NULL;
 			BOOL success = FALSE;
 			DWORD startType;
-    		BOOL isDelayedAuto = FALSE;
-    		BOOL isRegularAuto = FALSE;
+			BOOL isDelayedAuto = FALSE;
+			BOOL isRegularAuto = FALSE;
 
 			// Determinar el tipo de inicio según el argumento
 			if (!strcmp(arg, "manual") || !strcmp(arg, "demand"))			  startType = SERVICE_DEMAND_START;
@@ -331,7 +337,7 @@
 			// Configurar o desactivar el inicio retrasado según corresponda
 			SERVICE_DELAYED_AUTO_START_INFO delayedInfo;
 			delayedInfo.fDelayedAutostart = isDelayedAuto ? TRUE : FALSE;
-			
+
 			if (isDelayedAuto || isRegularAuto) {
 				success = ChangeServiceConfig2(hService, SERVICE_CONFIG_DELAYED_AUTO_START_INFO, &delayedInfo);
 				if (!success) printf("[!] Failed to %s delayed auto-start\n", isDelayedAuto ? "set" : "clear");
@@ -342,7 +348,7 @@
 			// Limpiar handles
 			CloseServiceHandle(hService);
 			CloseServiceHandle(hSCManager);
-			
+
 			return (0);
 		}
 
@@ -359,16 +365,16 @@
 			SERVICE_DELAYED_AUTO_START_INFO delayedInfo;
 			BOOL isDelayedStart = FALSE;
 			DWORD cbBytesNeeded = 0;
-			
+
 			printf("Status of %s:\n", Name);
-			
+
 			// Open the Service Control Manager
 			hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_CONNECT);
 			if (hSCManager == NULL) {
 				printf("[!] Error opening Service Control Manager\n");
 				return 1;
 			}
-			
+
 			// Open the service
 			hService = OpenService(hSCManager, Name, SERVICE_QUERY_STATUS | SERVICE_QUERY_CONFIG);
 			if (hService == NULL) {
@@ -376,12 +382,12 @@
 				CloseServiceHandle(hSCManager);
 				return 1;
 			}
-			
+
 			// Get service configuration
 			// First call to get required buffer size
 			if (!QueryServiceConfig(hService, NULL, 0, &cbBytesNeeded) && 
 				GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
-				
+
 				lpServiceConfig = (LPQUERY_SERVICE_CONFIG)LocalAlloc(LMEM_FIXED, cbBytesNeeded);
 				if (lpServiceConfig != NULL) {
 					if (!QueryServiceConfig(hService, lpServiceConfig, cbBytesNeeded, &cbBytesNeeded)) {
@@ -393,7 +399,7 @@
 					}
 				}
 			}
-			
+
 			// Get current service status
 			if (!QueryServiceStatusEx(
 				hService,
@@ -401,14 +407,14 @@
 				(LPBYTE)&statusProcess,
 				sizeof(SERVICE_STATUS_PROCESS),
 				&bytesNeeded)) {
-				
+
 				printf("[!] Failed to query service status\n");
 				if (lpServiceConfig != NULL) LocalFree(lpServiceConfig);
 				CloseServiceHandle(hService);
 				CloseServiceHandle(hSCManager);
 				return 1;
 			}
-			
+
 			// Check if service is delayed start (only applies to auto-start services)
 			if (lpServiceConfig != NULL && lpServiceConfig->dwStartType == SERVICE_AUTO_START) {
 				if (QueryServiceConfig2(
@@ -421,11 +427,11 @@
 					isDelayedStart = delayedInfo.fDelayedAutostart;
 				}
 			}
-			
+
 			// Display service information
 			printf("\nSERVICE DETAILS\n");
 			printf("---------------\n");
-			
+
 			// Display service status
 			printf("Status:         ");
 			switch (statusProcess.dwCurrentState) {
@@ -454,7 +460,7 @@
 					printf("UNKNOWN\n");
 					break;
 			}
-			
+
 			// Display start type if available
 			if (lpServiceConfig != NULL) {
 				printf("Start Type:     ");
@@ -481,10 +487,10 @@
 						printf("UNKNOWN\n");
 						break;
 				}
-				
+
 				// Display binary path
 				printf("Binary Path:    %s\n", lpServiceConfig->lpBinaryPathName);
-				
+
 				// Display service type
 				printf("Service Type:   ");
 				if (lpServiceConfig->dwServiceType & SERVICE_WIN32_OWN_PROCESS)
@@ -498,27 +504,25 @@
 				if (lpServiceConfig->dwServiceType & SERVICE_INTERACTIVE_PROCESS)
 					printf(" (INTERACTIVE)");
 				printf("\n");
-				
+
 				// Display account name
 				printf("Account:        %s\n", lpServiceConfig->lpServiceStartName);
-				
+
 				// Display display name
 				printf("Display Name:   %s\n", lpServiceConfig->lpDisplayName);
 			}
-			
+
 			// Display process ID if running
 			if (statusProcess.dwCurrentState == SERVICE_RUNNING || 
 				statusProcess.dwCurrentState == SERVICE_PAUSED) {
 				printf("Process ID:     %lu\n", statusProcess.dwProcessId);
 			}
-			
+
 			// Clean up
-			if (lpServiceConfig != NULL) {
-				LocalFree(lpServiceConfig);
-			}
+			if (lpServiceConfig != NULL) LocalFree(lpServiceConfig);
 			CloseServiceHandle(hService);
 			CloseServiceHandle(hSCManager);
-			
+
 			return 0;
 		}
 
@@ -561,9 +565,3 @@
 	}
 
 #pragma endregion
-
-			// SERVICE_BOOT_START				Dispositivos del sistema operativo
-			// SERVICE_SYSTEM_START				Dispositivos de inicio del sistema
-			// SERVICE_AUTO_START				Inicio automático al arrancar Windows
-			// SERVICE_DEMAND_START				Inicio manual
-			// SERVICE_DISABLED					Servicio deshabilitado
