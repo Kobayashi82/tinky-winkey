@@ -14,16 +14,15 @@
 
 #pragma region "Includes"
 
+	#include <stdio.h>
 	#include <windows.h>
 
 #pragma endregion
 
 #pragma region "Variables"
 
-	extern char						*Name;
-	extern char						*Version;
-	extern SERVICE_STATUS			g_ServiceStatus;
-	extern SERVICE_STATUS_HANDLE	g_StatusHandle;
+	#define Name	"Tinky2"
+	#define Version	"1.0.0"
 
 #pragma endregion
 
@@ -32,9 +31,7 @@
 	// Service Control
 	int control(int argc, char **argv);
 
-	// Funciones específicas del servicio
-	void ReportStatusToSCMgr(DWORD dwCurrentState, DWORD dwWin32ExitCode, DWORD dwWaitHint);
+	// Service Manager
 	void WINAPI ServiceMain(DWORD dwArgc, LPSTR *lpszArgv);
-	VOID WINAPI ServiceCtrlHandler(DWORD dwCtrl);
 
 #pragma endregion

@@ -6,7 +6,7 @@
 #    By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/05/08 13:00:27 by vzurera-          #+#    #+#              #
-#    Updated: 2025/05/12 14:57:51 by vzurera-         ###   ########.fr        #
+#    Updated: 2025/05/12 16:19:55 by vzurera-         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -30,7 +30,7 @@ EXE				= svc.exe
 
 OBJS			= $(OBJ)\main.obj				\
 				  $(OBJ)\service_control.obj	\
-				  $(OBJ)\process_manager.obj	\
+				  $(OBJ)\service_manager.obj	\
 				  $(OBJ)\impersonation.obj
 
 # ───────────────────────────────────────────────────────────── #
@@ -53,7 +53,7 @@ $(OBJ)\service_control.obj: $(SRC)\service_control.c
 	@if not exist $(OBJ) mkdir $(OBJ)
 	@$(CC) -Iinc $(FLAGS) /c /Fo$@ $**
 
-$(OBJ)\process_manager.obj: $(SRC)\process_manager.c
+$(OBJ)\service_manager.obj: $(SRC)\service_manager.c
 	@if not exist $(OBJ) mkdir $(OBJ)
 	@$(CC) -Iinc $(FLAGS) /c /Fo$@ $**
 
