@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/08 13:00:34 by vzurera-          #+#    #+#             */
-/*   Updated: 2025/05/11 16:35:50 by vzurera-         ###   ########.fr       */
+/*   Updated: 2025/05/12 14:57:46 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -99,32 +99,56 @@
 
     #pragma endregion
 
-    #pragma region "Main"
 
-        int main(int argc, char **argv) {
-            // Paso 1: Intentar iniciar como servicio
-            // Si este programa ha sido iniciado por el SCM, esto tendrá éxito
-            SERVICE_TABLE_ENTRY serviceTable[] = {
-                { Name, (LPSERVICE_MAIN_FUNCTION)ServiceMain },
-                { NULL, NULL }
-            };
+	#pragma region "isService"
 
-            // Registrarnos como servicio
-            // Si tiene éxito, la función no regresará hasta que el servicio se detenga
-            if (StartServiceCtrlDispatcher(serviceTable)) {
-                // Si llegamos aquí, el servicio se ha detenido correctamente
-                return (0);
-            }
+		int isService(void) {
+			SERVICE_TABLE_ENTRY serviceTable[] = {
+				{ Name, (LPSERVICE_MAIN_FUNCTION)ServiceMain },
+				{ NULL, NULL }
+			};
 
-            // Si StartServiceCtrlDispatcher falla con este error específico,
-            // significa que estamos ejecutándonos como aplicación normal (no como servicio)
-            if (GetLastError() != ERROR_FAILED_SERVICE_CONTROLLER_CONNECT) {
-                printf("Error al iniciar el servicio: %ld\n", GetLastError());
-                return (1);
-            }
+			// Si tiene éxito, la función no regresará hasta que el servicio se detenga
+			if (StartServiceCtrlDispatcher(serviceTable)) {
+				return (1);
+			}
 
-            return (control(argc, argv));
-        }
+			if (GetLastError() != ERROR_FAILED_SERVICE_CONTROLLER_CONNECT)
+				return (printf("\nError al iniciar el servicio: %ld\n", GetLastError()), 2);
+			return (0);
+		}
+
+	#pragma endregion
+
+	#pragma region "isAdmin"
+
+		int isAdmin(void) {
+			BOOL isElevated = FALSE;
+			HANDLE hToken = NULL;
+			
+			if (OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken)) {
+				TOKEN_ELEVATION elevation;
+				DWORD dwSize;
+
+				if (GetTokenInformation(hToken, TokenElevation, &elevation, sizeof(elevation), &dwSize)) isElevated = elevation.TokenIsElevated;
+				CloseHandle(hToken);
+			}
+
+			return (isElevated);
+		}
+
+	#pragma endregion
+
+	#pragma region "Main"
+
+		int main(int argc, char **argv) {
+			int exit_code = 0;
+
+			if ((exit_code = isService())) return (exit_code - 1);
+			if (!isAdmin()) return (printf("\nSe requieren permisos de administrador\n"), 1);
+
+			return (control(argc, argv));
+		}
 
     #pragma endregion
 
