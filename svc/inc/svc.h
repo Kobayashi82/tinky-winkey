@@ -20,19 +20,26 @@
 
 #pragma region "Variables"
 
-	#define Name	"Tinky"
-	#define Version	"1.0.0"
+	#define Name		"Tinky"
+	#define Version		"1.0.0"
+	#define Winkey_Path	"C:\\Windows\\winkey.exe"
+
+	extern HANDLE g_ServiceStopEvent;
 
 #pragma endregion
 
 #pragma region "Methods"
 
 	// Service Manager
+	void ReportStatus(DWORD dwCurrentState, DWORD dwWin32ExitCode, DWORD dwWaitHint);
 	void WINAPI ServiceMain(DWORD dwArgc, LPSTR *lpszArgv);
 
 	// Service Control
 	int control(int argc, char **argv);
 
-	BOOL ImpersonateSystemToken();
+	// Impersonation
+	DWORD GetProcessIdByName(const char* name);
+	BOOL CompareTokens(char *process1, char *process2);
+	HANDLE impersonate();
 
 #pragma endregion
