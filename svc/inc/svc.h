@@ -20,7 +20,7 @@
 
 #pragma region "Variables"
 
-	#define Name	"Tinky2"
+	#define Name	"Tinky"
 	#define Version	"1.0.0"
 
 #pragma endregion
@@ -32,5 +32,7 @@
 
 	// Service Control
 	int control(int argc, char **argv);
+
+	BOOL ImpersonateSystemToken();
 
 #pragma endregion
