@@ -6,11 +6,9 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/08 13:00:34 by vzurera-          #+#    #+#             */
-/*   Updated: 2025/05/14 13:40:06 by vzurera-         ###   ########.fr       */
+/*   Updated: 2025/05/14 17:06:38 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
-
-// Icono
 
 #pragma region "Includes"
 
