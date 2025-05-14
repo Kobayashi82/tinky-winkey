@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 13:31:21 by vzurera-          #+#    #+#             */
-/*   Updated: 2025/05/14 00:04:37 by vzurera-         ###   ########.fr       */
+/*   Updated: 2025/05/14 16:53:54 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,7 @@
 
 		DWORD GetProcessIdByName(const char* name) {
 			HANDLE handle = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-			PROCESSENTRY32 pe32 = {sizeof(pe32)};
+			PROCESSENTRY32 pe32 = { sizeof(pe32) };
 			if (Process32First(handle, &pe32)) do {
 				if (!_stricmp(pe32.szExeFile, name)) {
 					CloseHandle(handle);
@@ -144,7 +144,7 @@
 					printf("\nSIDs are different\n");
 				}
 
-			} while (0);
+			} while (FALSE);
 
 			if (pUser1)		free(pUser1);
 			if (pUser2)		free(pUser2);

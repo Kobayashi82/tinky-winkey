@@ -6,7 +6,7 @@
 #    By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/05/08 13:00:27 by vzurera-          #+#    #+#              #
-#    Updated: 2025/05/08 13:00:32 by vzurera-         ###   ########.fr        #
+#    Updated: 2025/05/14 17:00:37 by vzurera-         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -14,17 +14,22 @@
 # ─────────────────────── CONFIGURATION ─────────────────────── #
 # ───────────────────────────────────────────────────────────── #
 
+# /wd4255:		Falta de prototipos de función: func() vs func(void)
+# /wd4668:		Macros no definidas en condiciones
+
+NAME			= winkey
 SRC				= src
 OBJ				= build\obj
 BIN				= bin
 
-CC				= cl
-FLAGS			= /nologo /Wall /WX /EHsc /Iinc /Qspectre /wd5045 /DEBUG
-LIBS			= user32.lib advapi32.lib
+CC				= cl /nologo
+FLAGS			= /Wall /WX /wd4255 /wd4668
+LIBS			= advapi32.lib user32.lib
 
-EXE				= winkey.exe
-
-OBJS			= $(OBJ)\main.obj
+OBJS			= $(OBJ)\main.obj				\
+				  $(OBJ)\hook.obj				\
+				  $(OBJ)\log.obj				\
+				  $(OBJ)\resource.res
 
 # ───────────────────────────────────────────────────────────── #
 # ─────────────────────────── RULES ─────────────────────────── #
@@ -32,27 +37,38 @@ OBJS			= $(OBJ)\main.obj
 
 .SUFFIXES: .cpp .obj
 
-all: $(BIN)\$(EXE)
+all: $(BIN)\$(NAME).exe
+winkey: $(BIN)\$(NAME).exe
 
-$(BIN)\$(EXE): $(OBJS)
+$(BIN)\$(NAME).exe: $(OBJS)
 	@if not exist $(BIN) mkdir $(BIN)
-	@$(CC) $(FLAGS) /Fe$(BIN)\$(EXE) $(OBJS) $(LIBS)
+	@$(CC) -Iinc $(FLAGS) /Fe$(BIN)\$(NAME).exe $(OBJS) $(LIBS)
 
-$(OBJ)\main.obj: $(SRC)\main.cpp
+$(OBJ)\main.obj: $(SRC)\main.c
 	@if not exist $(OBJ) mkdir $(OBJ)
-	@$(CC) $(FLAGS) /c /Fo$@ $**
+	@$(CC) -Iinc $(FLAGS) /c /Fo$@ $**
+
+$(OBJ)\hook.obj: $(SRC)\hook.c
+	@if not exist $(OBJ) mkdir $(OBJ)
+	@$(CC) -Iinc $(FLAGS) /c /Fo$@ $**
+
+$(OBJ)\log.obj: $(SRC)\log.c
+	@if not exist $(OBJ) mkdir $(OBJ)
+	@$(CC) -Iinc $(FLAGS) /c /Fo$@ $**
+
+$(OBJ)\resource.res: res\resource.rc
+	@if not exist $(OBJ) mkdir $(OBJ)
+	@rc /nologo /fo$@ res\resource.rc
 
 clean:
 	@if exist $(OBJ) rmdir /s /q $(OBJ)
 	@if exist build rmdir /s /q build
+	@echo $(NAME)'s objects deleted
 
 fclean: clean
 	@if exist $(BIN) rmdir /s /q $(BIN)
+	@echo $(NAME)'s binary deleted
 
 re: fclean all
 
-_create_directories:
-	@if not exist $(OBJ) mkdir $(OBJ)
-	@if not exist $(BIN) mkdir $(BIN)
-
-.PHONY: all svc clean fclean re
+.PHONY: all winkey clean fclean re

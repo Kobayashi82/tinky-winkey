@@ -1,18 +1,34 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   main.cpp                                           :+:      :+:    :+:   */
+/*   winkey.h                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/05/08 13:00:34 by vzurera-          #+#    #+#             */
-/*   Updated: 2025/05/11 13:31:42 by vzurera-         ###   ########.fr       */
+/*   Created: 2025/05/14 16:21:25 by vzurera-          #+#    #+#             */
+/*   Updated: 2025/05/14 17:01:04 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <stdio.h>
+#pragma once
 
-int main() {
-	printf("Funciona\n");
-	return 0;
-}
+#pragma region "Includes"
+
+	#include <windows.h>
+
+#pragma endregion
+
+#pragma region "Variables"
+
+	#define Name		"Winkey"
+	#define Version		"1.0.0"
+
+	extern char			g_LogPath[MAX_PATH];
+
+#pragma endregion
+
+#pragma region "Methods"
+
+
+
+#pragma endregion

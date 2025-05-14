@@ -4,9 +4,9 @@
 /*   svc.h                                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   */
-/*   Created: 2025/05/11 13:21:38 by vzurera-          #+#    #+#             */
-/*   Updated: 2025/05/11 13:21:38 by vzurera-         ###   ########.fr       */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/05/14 16:22:13 by vzurera-          #+#    #+#             */
+/*   Updated: 2025/05/14 16:22:23 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,13 +22,15 @@
 
 	#define Name		"Tinky"
 	#define Version		"1.0.0"
-	#define Winkey_Path	"C:\\Windows\\winkey.exe"
 
-	extern HANDLE g_ServiceStopEvent;
+	extern char			g_WinkeyPath[MAX_PATH];
+	extern HANDLE		g_ServiceStopEvent;
 
 #pragma endregion
 
 #pragma region "Methods"
+
+	void WinkeyPath(char *Path);
 
 	// Service Manager
 	void ReportStatus(DWORD dwCurrentState, DWORD dwWin32ExitCode, DWORD dwWaitHint);

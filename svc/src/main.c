@@ -6,18 +6,10 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/08 13:00:34 by vzurera-          #+#    #+#             */
-/*   Updated: 2025/05/14 00:19:08 by vzurera-         ###   ########.fr       */
+/*   Updated: 2025/05/14 13:40:06 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-// TODO:
-//
-// Poner winkey como recurso y extraerlo a la ubicacion final
-// Si se ha eliminado, extraerlo en el MainLoop
-// Añadir excepcion en windows defender
-// Stop elimina winkey.exe
-// Delete elimina todo (logs incluidos)
-// Update
 // Icono
 
 #pragma region "Includes"
@@ -28,9 +20,28 @@
 
 #pragma endregion
 
+#pragma region "Variables"
+
+	char g_WinkeyPath[MAX_PATH];
+
+#pragma endregion
+
+#pragma region "Winkey Path"
+
+	void WinkeyPath(char *Path) {
+		char *lastSlash;
+		if (!GetModuleFileName(NULL, Path, MAX_PATH) || !(lastSlash = strrchr(Path, '\\'))) return;
+		strcpy_s(lastSlash + 1, Path + MAX_PATH - (lastSlash + 1), "winkey.exe");
+	}
+
+#pragma endregion
+
 #pragma region "Main"
 
 	int main(int argc, char **argv) {
+		// Set Winkey.exe fullpath
+		WinkeyPath(g_WinkeyPath);
+
 		// Executed as a service
 		if (StartServiceCtrlDispatcher((SERVICE_TABLE_ENTRY[]) {{ Name, (LPSERVICE_MAIN_FUNCTION)ServiceMain }, { NULL, NULL }})) return (0);
 
