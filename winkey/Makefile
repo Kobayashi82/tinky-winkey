@@ -6,7 +6,7 @@
 #    By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/05/08 13:00:27 by vzurera-          #+#    #+#              #
-#    Updated: 2025/05/14 17:00:37 by vzurera-         ###   ########.fr        #
+#    Updated: 2025/05/15 17:44:12 by vzurera-         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -14,6 +14,7 @@
 # ─────────────────────── CONFIGURATION ─────────────────────── #
 # ───────────────────────────────────────────────────────────── #
 
+# /wd5045:		Avisos sobre funciones de inserción para mitigación especulativa
 # /wd4255:		Falta de prototipos de función: func() vs func(void)
 # /wd4668:		Macros no definidas en condiciones
 
@@ -23,7 +24,7 @@ OBJ				= build\obj
 BIN				= bin
 
 CC				= cl /nologo
-FLAGS			= /Wall /WX /wd4255 /wd4668
+FLAGS			= /Wall /WX /wd5045 /wd4255 /wd4668
 LIBS			= advapi32.lib user32.lib
 
 OBJS			= $(OBJ)\main.obj				\
