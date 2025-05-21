@@ -6,7 +6,7 @@
 #    By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/05/08 13:00:27 by vzurera-          #+#    #+#              #
-#    Updated: 2025/05/15 17:44:12 by vzurera-         ###   ########.fr        #
+#    Updated: 2025/05/21 16:17:55 by vzurera-         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -28,8 +28,6 @@ FLAGS			= /Wall /WX /wd5045 /wd4255 /wd4668
 LIBS			= advapi32.lib user32.lib
 
 OBJS			= $(OBJ)\main.obj				\
-				  $(OBJ)\hook.obj				\
-				  $(OBJ)\log.obj				\
 				  $(OBJ)\resource.res
 
 # ───────────────────────────────────────────────────────────── #
@@ -46,14 +44,6 @@ $(BIN)\$(NAME).exe: $(OBJS)
 	@$(CC) -Iinc $(FLAGS) /Fe$(BIN)\$(NAME).exe $(OBJS) $(LIBS)
 
 $(OBJ)\main.obj: $(SRC)\main.c
-	@if not exist $(OBJ) mkdir $(OBJ)
-	@$(CC) -Iinc $(FLAGS) /c /Fo$@ $**
-
-$(OBJ)\hook.obj: $(SRC)\hook.c
-	@if not exist $(OBJ) mkdir $(OBJ)
-	@$(CC) -Iinc $(FLAGS) /c /Fo$@ $**
-
-$(OBJ)\log.obj: $(SRC)\log.c
 	@if not exist $(OBJ) mkdir $(OBJ)
 	@$(CC) -Iinc $(FLAGS) /c /Fo$@ $**
 

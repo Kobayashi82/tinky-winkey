@@ -6,11 +6,9 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/08 13:00:34 by vzurera-          #+#    #+#             */
-/*   Updated: 2025/05/18 11:14:06 by vzurera-         ###   ########.fr       */
+/*   Updated: 2025/05/21 16:17:17 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
-
-// Teclas especiales (F1, Retroceso, Enter, Cursores, Modificadores, etc.)
 
 #pragma region "Includes"
 
@@ -23,9 +21,7 @@
 
 #pragma region "Variables"
 
-	char	g_LogPath[MAX_PATH];
-	char	g_Buffer[BUFFER_SIZE + 1];
-	size_t	g_BufferLen;
+	// Aqui van las variables, si las hay
 
 #pragma endregion
 
@@ -54,19 +50,11 @@
 		// check if it has administrator privileges
 		if (!IsAdmin()) return (printf("\nAdministrator privileges are required\n"), 1);
 
-		// Set log path
-		char *lastSlash;
-		if (!GetModuleFileName(NULL, g_LogPath, MAX_PATH) || !(lastSlash = strrchr(g_LogPath, '\\')))
-			strcpy_s(g_LogPath, MAX_PATH, "c:\\winkey.log");
-		else strcpy_s(lastSlash + 1, g_LogPath + MAX_PATH - (lastSlash + 1), "winkey.log");
-
-		CreateThread(NULL, 0, HookThread, NULL, 0, NULL);
-
 		// Wait for close event
 		HANDLE hEvent = CreateEvent(NULL, TRUE, FALSE, "Global\\WinkeyTerminateEvent");
 		while(TRUE) {
 			if (WaitForSingleObject(hEvent, 100) == WAIT_OBJECT_0) {
-				LogToFile();
+				// Log or do whatever before closing
 				break;
 			}
 		}
