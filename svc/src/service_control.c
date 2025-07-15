@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 13:31:13 by vzurera-          #+#    #+#             */
-/*   Updated: 2025/05/12 18:02:35 by vzurera-         ###   ########.fr       */
+/*   Updated: 2025/07/15 18:15:43 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -383,7 +383,10 @@
 			printf("Status:          %s\n", PID ? "RUNNING" : "STOPPED");
 
 			if (PID) {
-				HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, PID);
+				printf("Process ID:      %lu\n", PID);
+				
+				HANDLE hProcess = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, PID);
+				if (!hProcess) hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, PID);
 				if (hProcess) {
 					char path[MAX_PATH] = {0};
 					DWORD size = MAX_PATH;

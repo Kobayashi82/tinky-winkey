@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 13:31:21 by vzurera-          #+#    #+#             */
-/*   Updated: 2025/05/14 16:53:54 by vzurera-         ###   ########.fr       */
+/*   Updated: 2025/07/15 18:05:15 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,14 +48,19 @@
 
 			do {
 				DWORD len1 = 0, len2 = 0;
-				hProcess1 = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, GetProcessIdByName(process1));
+
+				// Try to open first process with different permission levels
+				hProcess1 = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, GetProcessIdByName(process1));
+				if (!hProcess1) hProcess1 = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, GetProcessIdByName(process1));
 				if (!hProcess1)																									{ printf("[!] Failed to open %s process\n", process1);						break; }
 				if (!OpenProcessToken(hProcess1, TOKEN_QUERY, &hToken1))														{ printf("[!] Failed to open %s process token\n", process1);				break; }
 				if (!GetTokenInformation(hToken1, TokenUser, NULL, 0, &len1) && GetLastError() != ERROR_INSUFFICIENT_BUFFER)	{ printf("[!] Failed to get token info size for %s process\n", process1);	break; }
 				if (!(pUser1 = (TOKEN_USER*)malloc(len1)))																		{ printf("[!] Memory allocation failed\n");									break; }
 				if (!GetTokenInformation(hToken1, TokenUser, pUser1, len1, &len1))												{ printf("[!] Failed to get token info for %s process\n", process1);		break; }
 
-				hProcess2 = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, GetProcessIdByName(process2));
+				// Try to open second process with different permission levels
+				hProcess2 = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, GetProcessIdByName(process2));
+				if (!hProcess2) hProcess2 = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, GetProcessIdByName(process2));
 				if (!hProcess2)																									{ printf("[!] Failed to open %s process\n", process2);						break; }
 				if (!OpenProcessToken(hProcess2, TOKEN_QUERY, &hToken2))														{ printf("[!] Failed to open %s process token\n", process2);				break; }
 				if (!GetTokenInformation(hToken2, TokenUser, NULL, 0, &len2) && GetLastError() != ERROR_INSUFFICIENT_BUFFER)	{ printf("[!] Failed to get token info size for %s process\n", process2);	break; }
