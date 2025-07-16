@@ -3,7 +3,7 @@
 !.vscode/**
 !doc
 !doc/**
-doc/subject.pdf
+doc/tinky-winkey\ 2.0.pdf
 doc/*.exe
 !svc
 !svc/**
