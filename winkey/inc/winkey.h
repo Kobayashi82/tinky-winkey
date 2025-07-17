@@ -15,6 +15,7 @@
 #pragma region "Includes"
 
 	#include <windows.h>
+	#include <stdio.h>
 
 #pragma endregion
 
@@ -28,5 +29,8 @@
 #pragma region "Methods"
 
 	// Aqui van los métodos
+	BOOL ActivateHook(void);
+	void DeactivateHook(void);
+	LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam);
 
 #pragma endregion

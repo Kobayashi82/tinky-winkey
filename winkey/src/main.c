@@ -49,15 +49,31 @@
 	int main(void) {
 		// check if it has administrator privileges
 		if (!IsAdmin()) return (printf("\nAdministrator privileges are required\n"), 1);
+		
+		// Activar el hook
+		if (!ActivateHook()) {
+			return 1;
+		}
 
-		// Wait for close event
-		HANDLE hEvent = CreateEvent(NULL, TRUE, FALSE, "Global\\WinkeyTerminateEvent");
-		while(TRUE) {
-			if (WaitForSingleObject(hEvent, 100) == WAIT_OBJECT_0) {
-				// Log or do whatever before closing
-				break;
+		// Loop principal para manterner el hook activo
+		MSG msg;
+		while (GetMessage(&msg, NULL, 0, 0)) {
+			//TranslateMessage(&msg); // Traduce mensajes de teclado si es necesario
+			//DispatchMessage(&msg); // envía el mensaje a la ventana apropiada
+
+			HANDLE hEvent = CreateEvent(NULL, TRUE, FALSE, "Global\\WinkeyTerminateEvent");
+			while(TRUE) {
+				if (WaitForSingleObject(hEvent, 100) == WAIT_OBJECT_0) {
+					// Log or do whatever before closing
+					break;
+				}
 			}
 		}
+		
+		// Desactivar el hook antes de salir
+		DeactivateHook();
+
+		// Wait for close event
 
 		return (0);
 	}

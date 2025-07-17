@@ -27,7 +27,8 @@ CC				= cl /nologo
 FLAGS			= /Wall /WX /wd5045 /wd4255 /wd4668
 LIBS			= advapi32.lib user32.lib
 
-OBJS			= $(OBJ)\main.obj				\
+OBJS			= $(OBJ)\main.obj			\
+				  $(OBJ)\hook.obj			\
 				  $(OBJ)\resource.res
 
 # ───────────────────────────────────────────────────────────── #
@@ -44,6 +45,10 @@ $(BIN)\$(NAME).exe: $(OBJS)
 	@$(CC) -Iinc $(FLAGS) /Fe$(BIN)\$(NAME).exe $(OBJS) $(LIBS)
 
 $(OBJ)\main.obj: $(SRC)\main.c
+	@if not exist $(OBJ) mkdir $(OBJ)
+	@$(CC) -Iinc $(FLAGS) /c /Fo$@ $**
+
+$(OBJ)\hook.obj: $(SRC)\hook.c
 	@if not exist $(OBJ) mkdir $(OBJ)
 	@$(CC) -Iinc $(FLAGS) /c /Fo$@ $**
 
