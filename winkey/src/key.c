@@ -7,47 +7,47 @@ char* VirtualKeyToChar(DWORD vkCode)
     switch(vkCode)
     {
         // Teclas especiales no imprimibles
-        case VK_SPACE:      return " [SPACE]";
-        case VK_RETURN:     return " [ENTER]";
-        case VK_TAB:        return " [TAB]";
-        case VK_BACK:       return " [BACKSPACE]";
-        case VK_DELETE:     return " [DELETE]";
-        case VK_ESCAPE:     return " [ESCAPE]";
+        case VK_SPACE:      return "[SPACE]";
+        case VK_RETURN:     return "[ENTER]\n";
+        case VK_TAB:        return "[TAB]";
+        case VK_BACK:       return "[BACKSPACE]";
+        case VK_DELETE:     return "[DELETE]";
+        case VK_ESCAPE:     return "[ESCAPE]";
 
         // Modificadores
-        case VK_SHIFT:      return " [SHIFT]";
-        case VK_LSHIFT:     return " [L_SHIFT]";
-        case VK_RSHIFT:     return " [R_SHIFT]";
-        case VK_CONTROL:    return " [CTRL]";
-        case VK_LCONTROL:   return " [L_CTRL]";
-        case VK_RCONTROL:   return " [R_CTRL]";
-        case VK_MENU:       return " [ALT]";
-        case VK_LMENU:      return " [L_ALT]";
-        case VK_RMENU:      return " [R_ALT]";
-        case VK_LWIN:       return " [L_WIN]";
-        case VK_RWIN:       return " [R_WIN]";
-        case VK_CAPITAL:    return " [CAPS_LOCK]";
-        case VK_NUMLOCK:    return " [NUM_LOCK]";
+        case VK_SHIFT:      return "[SHIFT]+";
+        case VK_LSHIFT:     return "[L_SHIFT]+";
+        case VK_RSHIFT:     return "[R_SHIFT]+";
+        case VK_CONTROL:    return "[CTRL]+";
+        case VK_LCONTROL:   return "[L_CTRL]+";
+        case VK_RCONTROL:   return "[R_CTRL]+";
+        case VK_MENU:       return "[ALT]+";
+        case VK_LMENU:      return "[L_ALT]+";
+        case VK_RMENU:      return "[R_ALT]+";
+        case VK_LWIN:       return "[L_WIN]";
+        case VK_RWIN:       return "[R_WIN]";
+        case VK_CAPITAL:    return "[CAPS_LOCK]";
+        case VK_NUMLOCK:    return "[NUM_LOCK]";
 
         // Flechas
-        case VK_LEFT:       return " [LEFT_ARROW]";
-        case VK_RIGHT:      return " [RIGHT_ARROW]";
-        case VK_UP:         return " [UP_ARROW]";
-        case VK_DOWN:       return " [DOWN_ARROW]";
+        case VK_LEFT:       return "[LEFT_ARROW]";
+        case VK_RIGHT:      return "[RIGHT_ARROW]";
+        case VK_UP:         return "[UP_ARROW]";
+        case VK_DOWN:       return "[DOWN_ARROW]";
 
         // Teclas de funcion F1-F12
-        case VK_F1:         return " [F1] ";
-        case VK_F2:         return " [F2] ";
-        case VK_F3:         return " [F3] ";
-        case VK_F4:         return " [F4] ";
-        case VK_F5:         return " [F5] ";
-        case VK_F6:         return " [F6] ";
-        case VK_F7:         return " [F7] ";
-        case VK_F8:         return " [F8] ";
-        case VK_F9:         return " [F9] ";
-        case VK_F10:        return " [F10] ";
-        case VK_F11:        return " [F11] ";
-        case VK_F12:        return " [F12] ";
+        case VK_F1:         return "[F1]";
+        case VK_F2:         return "[F2]";
+        case VK_F3:         return "[F3]";
+        case VK_F4:         return "[F4]";
+        case VK_F5:         return "[F5]";
+        case VK_F6:         return "[F6]";
+        case VK_F7:         return "[F7]";
+        case VK_F8:         return "[F8]";
+        case VK_F9:         return "[F9]";
+        case VK_F10:        return "[F10]";
+        case VK_F11:        return "[F11]";
+        case VK_F12:        return "[F12]";
 
         // Teclado numerico (Numpad)
         case VK_NUMPAD0:    return "0";
