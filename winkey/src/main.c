@@ -58,8 +58,6 @@
 		// Loop principal para manterner el hook activo
 		MSG msg;
 		while (GetMessage(&msg, NULL, 0, 0)) {
-			//TranslateMessage(&msg); // Traduce mensajes de teclado si es necesario
-			//DispatchMessage(&msg); // envía el mensaje a la ventana apropiada
 
 			HANDLE hEvent = CreateEvent(NULL, TRUE, FALSE, "Global\\WinkeyTerminateEvent");
 			while(TRUE) {

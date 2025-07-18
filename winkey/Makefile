@@ -29,6 +29,7 @@ LIBS			= advapi32.lib user32.lib
 
 OBJS			= $(OBJ)\main.obj			\
 				  $(OBJ)\hook.obj			\
+				  $(OBJ)\key.obj			\
 				  $(OBJ)\resource.res
 
 # ───────────────────────────────────────────────────────────── #
@@ -49,6 +50,10 @@ $(OBJ)\main.obj: $(SRC)\main.c
 	@$(CC) -Iinc $(FLAGS) /c /Fo$@ $**
 
 $(OBJ)\hook.obj: $(SRC)\hook.c
+	@if not exist $(OBJ) mkdir $(OBJ)
+	@$(CC) -Iinc $(FLAGS) /c /Fo$@ $**
+
+$(OBJ)\key.obj: $(SRC)\key.c
 	@if not exist $(OBJ) mkdir $(OBJ)
 	@$(CC) -Iinc $(FLAGS) /c /Fo$@ $**
 
