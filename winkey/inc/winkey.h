@@ -36,7 +36,7 @@
 	void DeactivateHook(void);
 
 	// llamada desde hook.c
-	char* VirtualKeyToChar(DWORD vkCode);
+	char* VirtualKeyToChar(DWORD vkCode, DWORD scanCode);
 	
 
 #pragma endregion
