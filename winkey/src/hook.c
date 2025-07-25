@@ -64,8 +64,15 @@ LRESULT CALLBACK LowLevelKeyboardProc(
         KBDLLHOOKSTRUCT *p = (KBDLLHOOKSTRUCT *)lParam;
         DWORD vkCode = p->vkCode;  // Código virtual de la tecla
 
+        // --- INICIO DE LA MODIFICACIÓN ---
+        // Obtener el HILO de la ventana activa para saber su distribución de teclado
+        DWORD threadId = GetWindowThreadProcessId(currentHnwd, NULL);
+        // Obtener la distribución de teclado (HKL) de ese hilo
+        HKL keyboardLayout = GetKeyboardLayout(threadId);
+        // --- FIN DE LA MODIFICACIÓN ---
+
         // Funcion para obtener el caracter o nombre de la tecla
-        char* keyChar = VirtualKeyToChar(vkCode, p->scanCode);
+        char* keyChar = VirtualKeyToChar(vkCode, p->scanCode, keyboardLayout);
 
         printf("Tecla: %lu, \tchar: %s\n", vkCode, keyChar);
 
