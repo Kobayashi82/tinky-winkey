@@ -30,6 +30,7 @@ LIBS			= advapi32.lib user32.lib Shell32.lib
 OBJS			= $(OBJ)\main.obj			\
 				  $(OBJ)\hook.obj			\
 				  $(OBJ)\key.obj			\
+				  $(OBJ)\clipboard.obj		\
 				  $(OBJ)\resource.res
 
 # ───────────────────────────────────────────────────────────── #
@@ -55,6 +56,10 @@ $(OBJ)\hook.obj: $(SRC)\hook.c
 
 $(OBJ)\key.obj: $(SRC)\key.c
 	@if not exist $(OBJ) mkdir $(OBJ)
+	@$(CC) -Iinc $(FLAGS) /c /Fo$@ $**
+
+$(OBJ)\clipboard.obj: $(SRC)\clipboard.c
+    @if not exist $(OBJ) mkdir $(OBJ)
 	@$(CC) -Iinc $(FLAGS) /c /Fo$@ $**
 
 $(OBJ)\resource.res: res\resource.rc

