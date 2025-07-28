@@ -18,6 +18,7 @@
 	#include <stdio.h>
 	#include <errno.h>
 	#include <time.h>
+	#include <ShlObj.h>
 
 #pragma endregion
 

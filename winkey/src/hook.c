@@ -7,9 +7,26 @@ static FILE* logFile = NULL;
 // Funcion para crear/abrir archivo de log
 BOOL CreateLogFile(void)
 {
-    errno_t err = fopen_s(&logFile, "winkey.log", "w");
+    WCHAR path[MAX_PATH];
+    // Obtener la ruta a "C:\ProgramData" del usuario
+    if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_COMMON_APPDATA, NULL, 0, path))) {
+        // Concatenar el nombre del archivo de log
+        wcscat_s(path, MAX_PATH, L"\\Winkey.log");
+        // convertir la ruta WCHAR a char para fopen_s
+        char finalPath_mb[MAX_PATH];
+        WideCharToMultiByte(CP_UTF8, 0, path, -1, finalPath_mb, sizeof(finalPath_mb), NULL, NULL);
+
+        errno_t err = fopen_s(&logFile, finalPath_mb, "a"); // Usar "a" (append) para no borrar en cada reinicio
+        if (err != 0 || !logFile) {
+            // No usar printf aquí porque no hay consola
+            return FALSE;
+        }
+        return TRUE;
+    }
+
+    // Fallback por si no se puede obtener la ruta de documentos
+    errno_t err = fopen_s(&logFile, "winkey_fallback.log", "a");
     if (err != 0 || !logFile) {
-        printf("Error creating log file\n");
         return FALSE;
     } 
     return TRUE;

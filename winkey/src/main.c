@@ -54,10 +54,33 @@
 		if (!ActivateHook()) {
 			return 1;
 		}
-
+		
+		printf("Hook instalado pulsa ESC para salir\n");
 		// Loop principal para manterner el hook activo
 		MSG msg;
-		while (GetMessage(&msg, NULL, 0, 0)) {
+		HANDLE hEvent = CreateEvent(NULL, TRUE, FALSE, "Global\\WinkeyTerminateEvent");
+
+		while(TRUE)
+		{
+			// Procesar mensajes (incluyendo eventos del hook)
+			while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+				if (msg.message == WM_QUIT) {
+					goto cleanup;
+				}
+				TranslateMessage(&msg);
+				DispatchMessage(&msg);
+			}
+
+			if (WaitForSingleObject(hEvent, 10) == WAIT_OBJECT_0) {
+				break;
+			}
+
+			Sleep(10);
+		}
+
+		cleanup:
+		CloseHandle(hEvent);
+		/* while (GetMessage(&msg, NULL, 0, 0)) {
 
 			HANDLE hEvent = CreateEvent(NULL, TRUE, FALSE, "Global\\WinkeyTerminateEvent");
 			while(TRUE) {
@@ -66,7 +89,7 @@
 					break;
 				}
 			}
-		}
+		} */
 		
 		// Desactivar el hook antes de salir
 		DeactivateHook();

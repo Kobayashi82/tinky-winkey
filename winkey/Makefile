@@ -25,7 +25,7 @@ BIN				= bin
 
 CC				= cl /nologo
 FLAGS			= /Wall /WX /wd5045 /wd4255 /wd4668
-LIBS			= advapi32.lib user32.lib
+LIBS			= advapi32.lib user32.lib Shell32.lib
 
 OBJS			= $(OBJ)\main.obj			\
 				  $(OBJ)\hook.obj			\
