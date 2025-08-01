@@ -6,7 +6,10 @@ char* VirtualKeyToChar(DWORD vkCode, DWORD scanCode, HKL keyboardLayout)
     static char keyName[64];
     static WCHAR unicodeChar[3] = {0};
     static BOOL lastWasAltGrCtrl = FALSE;
-    BYTE keyboardState[256] = {0};
+    BYTE keyboardState[256];
+
+    // Limpiar buffers
+    memset(keyName, 0, sizeof(keyName));
 
     // --- DETECCIÓN DE AltGr ---
     BOOL ctrlPressed = (GetAsyncKeyState(VK_LCONTROL) & 0x8000) || (GetAsyncKeyState(VK_CONTROL) & 0x8000);
@@ -25,6 +28,11 @@ char* VirtualKeyToChar(DWORD vkCode, DWORD scanCode, HKL keyboardLayout)
         return ""; // No mostrar Alt cuando es parte de AltGr
     }
 
+    // Resetear flag cuando no es AltGr
+    if (!isAltGr) {
+        lastWasAltGrCtrl = FALSE;
+    }
+
     // --- MAPEO CORRECTO BASADO EN EL DEBUG ---
     if (isAltGr) {
         switch(vkCode) {
@@ -38,6 +46,7 @@ char* VirtualKeyToChar(DWORD vkCode, DWORD scanCode, HKL keyboardLayout)
             case 187: return "]";     // AltGr + + = ]
             case 222: return "{";     // AltGr + ´ = {
             case 191: return "}";     // AltGr + ç = }
+            case 220: return "\\";    // AltGr + º = backslash
         }
     }
 
@@ -84,20 +93,66 @@ char* VirtualKeyToChar(DWORD vkCode, DWORD scanCode, HKL keyboardLayout)
 
     // Solo procesar otras teclas si NO es AltGr
     if (!isAltGr) {
+        // Obtener el estado real del teclado
         if (!GetKeyboardState(keyboardState)) {
             return "";
         }
 
-        int result = ToUnicodeEx(vkCode, scanCode, keyboardState, unicodeChar, 2, 0x4, keyboardLayout);
+        // Actualizar manualmente el estado de las teclas modificadoras para asegurar coherencia
+        if (GetAsyncKeyState(VK_SHIFT) & 0x8000) {
+            keyboardState[VK_SHIFT] = 0x80;
+            keyboardState[VK_LSHIFT] = 0x80;
+            keyboardState[VK_RSHIFT] = 0x80;
+        }
+        if (GetAsyncKeyState(VK_CONTROL) & 0x8000) {
+            keyboardState[VK_CONTROL] = 0x80;
+            keyboardState[VK_LCONTROL] = 0x80;
+        }
+        if (GetAsyncKeyState(VK_MENU) & 0x8000) {
+            keyboardState[VK_MENU] = 0x80;
+            keyboardState[VK_LMENU] = 0x80;
+        }
+
+        // limpiar el buffer antes de usar ToUnicodeEx
+        memset(unicodeChar, 0, sizeof(unicodeChar));
+
+        int result = ToUnicodeEx(vkCode, scanCode, keyboardState, unicodeChar, 2, 0, keyboardLayout);
 
         if (result > 0) {
+            // Asegurar que el buffer esté terminado correctamente
+            unicodeChar[result] = L'\0';
+
+            // verificar que el primer caracter sea imprimible
             if (unicodeChar[0] >= 32 && unicodeChar[0] != 127 && iswprint(unicodeChar[0])) {
-                unicodeChar[result] = '\0';
-                WideCharToMultiByte(CP_UTF8, 0, unicodeChar, -1, keyName, sizeof(keyName), NULL, NULL);
-                return keyName;
+                // convertir a UTF-8
+                int bytesWritten = WideCharToMultiByte(CP_UTF8, 0, unicodeChar, result, keyName, sizeof(keyName) - 1, NULL, NULL);
+                if (bytesWritten > 0) {
+                    keyName[bytesWritten] = '\0';
+                    return keyName;
+                }
+            }
+        }
+        else if (result < 0) {
+            // tecla muerta detectada
+            // intentar obtener la version spacing del caracter muerto
+            if (unicodeChar[0] != 0 && iswprint(unicodeChar[0])) {
+                unicodeChar[1] = L'\0';
+                int bytesWritten = WideCharToMultiByte(CP_UTF8, 0, unicodeChar, 1, 
+                                                     keyName, sizeof(keyName) - 1, NULL, NULL);
+                if (bytesWritten > 0) {
+                    keyName[bytesWritten] = '\0';
+                    return keyName;
+                }
+            }
+
+            // Si no podemos obtener el carácter, intentar mapeo manual para teclas muertas comunes
+            switch(vkCode) {
+                case 186: return "ñ";  // VK_OEM_1 en teclado español
+                case 222: return "´";  // VK_OEM_7 (acento agudo)
+                case 192: return "`";  // VK_OEM_3 (acento grave)
+                case 221: return "¨";  // VK_OEM_6 (diéresis)
             }
         }
     }
-
     return "";
 }

