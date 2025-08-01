@@ -1,86 +1,93 @@
+<div align="center">
+
+![Security](https://img.shields.io/badge/Seguridad-brown?style=for-the-badge)
+![Service Keylogger](https://img.shields.io/badge/Servicio-Keylogger-blue?style=for-the-badge)
+![C Language](https://img.shields.io/badge/Lenguaje-C-red?style=for-the-badge)
+
+*Un keylogger de bajo nivel para Windows diseñado para ejecutarse como servicio persistente en segundo plano*
+
+</div>
+
 # Tinky Winkey
 
-## Windows Service and Keylogger Implementation
+> Este proyecto es únicamente para fines educativos como parte del curriculum de 42 School. El código debe usarse solo en entornos controlados, como máquinas virtuales.  Usar keyloggers sin autorización apropiada es ilegal y poco ético.
 
-This project implements a Windows service called "tinky" and a keylogger application called "winkey". It's an educational project designed to understand Windows service architecture, keyboard hooking mechanisms, and system process interaction.
+## 🎯 Descripción
 
-> **IMPORTANT**: This project is for educational purposes only. The code in this repository should only be used in controlled environments, such as virtual machines. Using keyloggers without proper authorization is illegal and unethical.
+Este proyecto implementa un servicio de Windows llamado ```tinky``` y una aplicación keylogger llamada ```winkey```.  
+Es un proyecto educativo de ```42 School``` diseñado para comprender la arquitectura de servicios de Windows, mecanismos de captura de teclado e interacción con procesos del sistema.
 
-## Project Overview
+### 1. Servicio (svc.exe)
 
-The project consists of two main components:
+Es una aplicación de servicio de Windows con las siguientes capacidades:
+- Instalación y registro como servicio del sistema
+- Configuración de inicio automático
+- Iniciar y detener el servicio manualmente
+- Eliminación del servicio
+- Suplantación de token SYSTEM
+- Gestión del proceso keylogger
 
-### 1. Windows Service (svc.exe)
+### 2. Keylogger (winkey.exe)
 
-A Windows service application with the following capabilities:
-- Installation and registration as a system service
-- Starting and stopping the service
-- Service removal
-- Impersonation of SYSTEM token
-- Management of the keylogger process
+Una aplicación de registro de teclas que:
+- Detecta procesos en primer plano
+- Captura pulsaciones de teclas mediante hooks de teclado de bajo nivel
+- Registra marcas de tiempo y títulos de ventanas
+- Guarda los datos capturados en formato legible
+- Soporta identificadores de configuración regional
 
-### 2. Keylogger Application (winkey.exe)
+## Uso
 
-A keylogging application that:
-- Detects foreground processes
-- Captures keystrokes through low-level keyboard hooks
-- Records timestamps and process information
-- Saves captured data in a human-readable format
-- Supports current locale identifiers
-
-## Technical Requirements
-
-- **Platform**: Windows 10/11
-- **Languages**: C/C++
-- **Build tools**: NMAKE and CL compiler
-- **Compilation flags**: /Wall and /WX
-- **Required Windows API functions**:
-  - OpenSCManager
-  - CreateService
-  - OpenService
-  - StartService
-  - ControlService
-  - CloseServiceHandle
-  - DuplicateTokenEx
-
-## Usage
-
-### Building the project
+### Compilar
 
 ```
 nmake
 ```
 
-### Service Management
+### Gestión del servicio
 
-```
-# Install the service
+```bash
+# Instalar el servicio
 svc.exe install
 
-# Start the service
+# Iniciar el servicio
 svc.exe start
 
-# Stop the service
+# Configurar tipo de inicio
+svc.exe config <mode>
+
+# Estado del servicio y keylogger
+svc.exe status
+
+# Detener el servicio
 svc.exe stop
 
-# Delete the service
+# Eliminar el servicio
 svc.exe delete
 ```
 
-### Output
+### Salida
 
-The keylogger generates a log file (winkey.log) with the following format:
+El keylogger genera un archivo de log (winkey.log) con el siguiente formato:
 ```
-[TIMESTAMP] - 'FOREGROUND PROCESS'
-KEYSTROKE_DATA
+[MARCA_TIEMPO] - 'TITULO_VENTANA'
+PULSACIONES_TECLAS
 ```
 
-## Development Environment
+## Aviso de Seguridad
 
-- Visual Studio Code with C/C++ extensions
-- Windows SDK
-- Git
+Este proyecto se desarrolla exclusivamente con fines educativos como parte del curriculum de ```42 School``` para entender conceptos de programación de sistemas Windows. La implementación debe usarse únicamente en entornos aislados como máquinas virtuales.
 
-## Security Notice
+## 📄 Licencia
 
-This project is developed purely for educational purposes to understand Windows system programming concepts. The implementation should only be used in isolated environments like virtual machines.
+Este proyecto está licenciado bajo la WTFPL – [Do What the Fuck You Want to Public License](http://www.wtfpl.net/about/).
+
+---
+
+<div align="center">
+
+**🌐 Desarrollado como parte del curriculum de 42 School 🌐**
+
+*"Your secrets are safe... with me"*
+
+</div>
