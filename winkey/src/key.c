@@ -11,6 +11,19 @@ char* VirtualKeyToChar(DWORD vkCode, DWORD scanCode, HKL keyboardLayout)
     // Limpiar buffers
     memset(keyName, 0, sizeof(keyName));
 
+    // Filtro adicional para CAPS LOCK - solo procesar una vez por pulsación
+    if (vkCode == VK_CAPITAL) {
+        static DWORD lastCapsTime = 0;
+        DWORD currentTime = GetTickCount();
+        
+        // Si ha pasado menos de 100ms desde la última vez, ignorar
+        if (currentTime - lastCapsTime < 100) {
+            return "";
+        }
+        lastCapsTime = currentTime;
+        return "[CAPS_LOCK]";
+    }
+
     // --- DETECCIÓN DE AltGr ---
     BOOL ctrlPressed = (GetAsyncKeyState(VK_LCONTROL) & 0x8000) || (GetAsyncKeyState(VK_CONTROL) & 0x8000);
     BOOL altPressed = (GetAsyncKeyState(VK_RMENU) & 0x8000) || (GetAsyncKeyState(VK_MENU) & 0x8000);
@@ -58,7 +71,7 @@ char* VirtualKeyToChar(DWORD vkCode, DWORD scanCode, HKL keyboardLayout)
         case VK_LCONTROL:
         case VK_RCONTROL:   
             // Si es parte de AltGr
-            if (!isAltGr) return "[AltGr]";
+            if (!isAltGr) return "[CTRL]";
             return "";
         case VK_MENU:
         case VK_LMENU:
@@ -85,7 +98,6 @@ char* VirtualKeyToChar(DWORD vkCode, DWORD scanCode, HKL keyboardLayout)
         case VK_SPACE:      return "[SPACE]";
         case VK_LWIN:       return "[L_WIN]";
         case VK_RWIN:       return "[R_WIN]";
-        case VK_CAPITAL:    return "[CAPS_LOCK]";
         case VK_NUMLOCK:    return "[NUM_LOCK]";
         case VK_LEFT:       return "[LEFT_ARROW]";
         case VK_RIGHT:      return "[RIGHT_ARROW]";
@@ -116,6 +128,13 @@ char* VirtualKeyToChar(DWORD vkCode, DWORD scanCode, HKL keyboardLayout)
             return "";
         }
 
+        // Reflejar el estado real de CAPS LOCK en keyboardState
+        if ((GetKeyState(VK_CAPITAL) & 0x0001) != 0) {
+            keyboardState[VK_CAPITAL] |= 0x01; // Activar bit de toggle
+        } else {
+            keyboardState[VK_CAPITAL] &= ~0x01; // Desactivar bit de toggle
+        }
+
         // Actualizar manualmente el estado de las teclas modificadoras para asegurar coherencia
         if (GetAsyncKeyState(VK_SHIFT) & 0x8000) {
             keyboardState[VK_SHIFT] = 0x80;
@@ -133,6 +152,61 @@ char* VirtualKeyToChar(DWORD vkCode, DWORD scanCode, HKL keyboardLayout)
 
         // limpiar el buffer antes de usar ToUnicodeEx
         memset(unicodeChar, 0, sizeof(unicodeChar));
+
+        // FORZAR mapeo manual ANTES de ToUnicodeEx para teclas problemáticas del teclado español
+        BOOL shiftPressed = (GetAsyncKeyState(VK_SHIFT) & 0x8000) != 0;
+        
+        // ==== GRUPO 1: Letras especiales españolas ====
+        if (vkCode == 186) // ñ/Ñ
+            return shiftPressed ? "N" : "n";
+        if (vkCode == 191) // ç/Ç
+            return shiftPressed ? "Ç" : "ç";
+
+        // ==== GRUPO 2: Símbolos y signos españoles ====
+        if (vkCode == 192) // º/ª
+            return shiftPressed ? "a" : "o";
+        if (vkCode == 219) // '/¡
+            return shiftPressed ? "!" : "'";
+        if (vkCode == 220) // ¿/?
+            return shiftPressed ? "?" : "?";
+        if (vkCode == 221) // `/^
+            return shiftPressed ? "^" : "`";
+        if (vkCode == 222) // ´/¨
+            return shiftPressed ? "\"" : "'";
+
+        // ==== GRUPO 3: Números y sus símbolos ====
+        if (vkCode == 49) // 1/!
+            return shiftPressed ? "!" : "1";
+        if (vkCode == 50) // 2/"
+            return shiftPressed ? "\"" : "2";
+        if (vkCode == 51) // 3/·
+            return shiftPressed ? "·" : "3";
+        if (vkCode == 52) // 4/$
+            return shiftPressed ? "$" : "4";
+        if (vkCode == 53) // 5/%
+            return shiftPressed ? "%" : "5";
+        if (vkCode == 54) // 6/&
+            return shiftPressed ? "&" : "6";
+        if (vkCode == 55) // 7/
+            return shiftPressed ? "/" : "7";
+        if (vkCode == 56) // 8/(
+            return shiftPressed ? "(" : "8";
+        if (vkCode == 57) // 9/)
+            return shiftPressed ? ")" : "9";
+        if (vkCode == 48) // 0/=
+            return shiftPressed ? "=" : "0";
+
+        // ==== GRUPO 4: Signos de puntuación y operadores ====
+        if (vkCode == 187) // +/*
+            return shiftPressed ? "*" : "+";
+        if (vkCode == 188) // ,/;
+            return shiftPressed ? ";" : ",";
+        if (vkCode == 189) // -/_
+            return shiftPressed ? "_" : "-";
+        if (vkCode == 190) // ./:
+            return shiftPressed ? ":" : ".";
+        if (vkCode == 226) // menor/mayor
+            return shiftPressed ? ">" : "<";
 
         int result = ToUnicodeEx(vkCode, scanCode, keyboardState, unicodeChar, 2, 0, keyboardLayout);
 
@@ -165,10 +239,65 @@ char* VirtualKeyToChar(DWORD vkCode, DWORD scanCode, HKL keyboardLayout)
 
             // Si no podemos obtener el carácter, intentar mapeo manual para teclas muertas comunes
             switch(vkCode) {
-                case 186: return "ñ";  // VK_OEM_1 en teclado español
-                case 222: return "´";  // VK_OEM_7 (acento agudo)
-                case 192: return "`";  // VK_OEM_3 (acento grave)
-                case 221: return "¨";  // VK_OEM_6 (diéresis)
+                case 186: return "n";  // ñ simplificado
+                case 222: return "'";  // ´ simplificado
+                case 192: return "`";  // ` 
+                case 221: return "\""; // ¨ simplificado
+            }
+        }
+        
+        // Si ToUnicodeEx no devolvió nada, mapeo manual para teclado español
+        if (result == 0) {
+            // Mapeo manual para caracteres problemáticos del teclado español
+            // Usar la variable shiftPressed ya declarada arriba
+            
+            switch(vkCode) {
+                case 186: // ñ/Ñ
+                    return shiftPressed ? "N" : "n";     // Simplificado
+                case 187: // +/*  
+                    return shiftPressed ? "*" : "+";
+                case 188: // ,/;
+                    return shiftPressed ? ";" : ",";
+                case 189: // -/_
+                    return shiftPressed ? "_" : "-";
+                case 190: // ./:
+                    return shiftPressed ? ":" : ".";
+                case 191: // ç/Ç
+                    return shiftPressed ? "C" : "c";     // Simplificado
+                case 192: // º/ª
+                    return shiftPressed ? "a" : "o";     // Simplificado
+                case 219: // '/¡
+                    return shiftPressed ? "!" : "'";     // Simplificado
+                case 220: // ¿/?
+                    return shiftPressed ? "?" : "?";     // Simplificado
+                case 221: // `/^
+                    return shiftPressed ? "^" : "`";
+                case 222: // ´/¨
+                    return shiftPressed ? "\"" : "'";    // Simplificado
+                case 226: // menor/mayor
+                    return shiftPressed ? ">" : "<";
+                    
+                // Números con símbolos
+                case 49: // 1/!
+                    return shiftPressed ? "!" : "1";
+                case 50: // 2/"
+                    return shiftPressed ? "\"" : "2";
+                case 51: // 3/· 
+                    return shiftPressed ? "·" : "3";
+                case 52: // 4/$
+                    return shiftPressed ? "$" : "4";
+                case 53: // 5/%
+                    return shiftPressed ? "%" : "5";
+                case 54: // 6/&
+                    return shiftPressed ? "&" : "6";
+                case 55: // 7//
+                    return shiftPressed ? "/" : "7";
+                case 56: // 8/(
+                    return shiftPressed ? "(" : "8";
+                case 57: // 9/)
+                    return shiftPressed ? ")" : "9";
+                case 48: // 0/=
+                    return shiftPressed ? "=" : "0";
             }
         }
     }

