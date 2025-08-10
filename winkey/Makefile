@@ -31,6 +31,7 @@ OBJS			= $(OBJ)\main.obj			\
 				  $(OBJ)\hook.obj			\
 				  $(OBJ)\key.obj			\
 				  $(OBJ)\clipboard.obj		\
+				  $(OBJ)\log.obj			\
 				  $(OBJ)\resource.res
 
 # ───────────────────────────────────────────────────────────── #
@@ -60,6 +61,10 @@ $(OBJ)\key.obj: $(SRC)\key.c
 
 $(OBJ)\clipboard.obj: $(SRC)\clipboard.c
     @if not exist $(OBJ) mkdir $(OBJ)
+	@$(CC) -Iinc $(FLAGS) /c /Fo$@ $**
+
+$(OBJ)\log.obj: $(SRC)\log.c
+	@if not exist $(OBJ) mkdir $(OBJ)
 	@$(CC) -Iinc $(FLAGS) /c /Fo$@ $**
 
 $(OBJ)\resource.res: res\resource.rc

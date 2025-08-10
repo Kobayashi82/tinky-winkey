@@ -14,9 +14,6 @@
 
 	#include "winkey.h"
 
-	#include <stdio.h>
-	#include <windows.h>
-
 #pragma endregion
 
 #pragma region "Variables"
@@ -67,7 +64,7 @@
 			// Procesar mensajes (incluyendo eventos del hook)
 			while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
 				if (msg.message == WM_QUIT) {
-					goto cleanup;
+					break;
 				}
 				TranslateMessage(&msg);
 				DispatchMessage(&msg);
@@ -86,24 +83,8 @@
 			Sleep(10);
 		}
 
-		cleanup:
 		CloseHandle(hEvent);
-		/* while (GetMessage(&msg, NULL, 0, 0)) {
-
-			HANDLE hEvent = CreateEvent(NULL, TRUE, FALSE, "Global\\WinkeyTerminateEvent");
-			while(TRUE) {
-				if (WaitForSingleObject(hEvent, 100) == WAIT_OBJECT_0) {
-					// Log or do whatever before closing
-					break;
-				}
-			}
-		} */
-		
-		// Desactivar el hook antes de salir
 		DeactivateHook();
-
-		// Wait for close event
-
 		return (0);
 	}
 

