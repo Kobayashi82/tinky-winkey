@@ -32,6 +32,7 @@ OBJS			= $(OBJ)\main.obj			\
 				  $(OBJ)\key.obj			\
 				  $(OBJ)\clipboard.obj		\
 				  $(OBJ)\log.obj			\
+				  $(OBJ)\service.obj		\
 				  $(OBJ)\resource.res
 
 # ───────────────────────────────────────────────────────────── #
@@ -64,6 +65,10 @@ $(OBJ)\clipboard.obj: $(SRC)\clipboard.c
 	@$(CC) -Iinc $(FLAGS) /c /Fo$@ $**
 
 $(OBJ)\log.obj: $(SRC)\log.c
+	@if not exist $(OBJ) mkdir $(OBJ)
+	@$(CC) -Iinc $(FLAGS) /c /Fo$@ $**
+
+$(OBJ)\service.obj: $(SRC)\service.c
 	@if not exist $(OBJ) mkdir $(OBJ)
 	@$(CC) -Iinc $(FLAGS) /c /Fo$@ $**
 
