@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 13:31:13 by vzurera-          #+#    #+#             */
-/*   Updated: 2025/08/13 11:05:14 by vzurera-         ###   ########.fr       */
+/*   Updated: 2025/08/13 18:50:31 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -382,7 +382,7 @@
 			printf("-----------------\n");
 			printf("Status:          %s\n", PID ? "RUNNING" : "STOPPED");
 
-			if (PID) {			
+			if (PID) {
 				HANDLE hProcess = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, PID);
 				if (!hProcess) hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, PID);
 				if (hProcess) {
@@ -401,7 +401,6 @@
 				} else {
 					printf("Process ID:      %lu\n", PID);
 				}
-
 			}
 
 			return (0);
