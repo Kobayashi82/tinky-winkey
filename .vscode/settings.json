@@ -1,5 +1,6 @@
 {
     "files.associations": {
-        "winkey.h": "c"
+        "winkey.h": "c",
+        "*.rh": "c"
     }
 }

