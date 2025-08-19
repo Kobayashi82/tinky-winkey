@@ -69,7 +69,7 @@ void DeactivateHook(void)
 
     // Close main log file if open
     if (g_winkeyState.logFile) {
-        fprintf(g_winkeyState.logFile, "=== Winkey Stopped ===\n");
+        fprintf(g_winkeyState.logFile, "\n\n========================= Winkey Stopped ==========================\n");
         fflush(g_winkeyState.logFile);
         fclose(g_winkeyState.logFile);
         g_winkeyState.logFile = NULL;

