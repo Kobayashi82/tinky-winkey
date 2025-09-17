@@ -4,7 +4,7 @@
 !doc
 !doc/**
 doc/tinky-winkey\ 2.0.pdf
-doc/*.exe
+doc/*.iso
 !svc
 !svc/**
 svc/build
